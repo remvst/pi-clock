@@ -1,3 +1,6 @@
+const MESSAGE_QUEUE = [];
+let CURRENT_MESSAGE = null;
+
 function addZeroes(x, n = 2) {
     x = x.toString();
     while (x.length < n) {
@@ -29,21 +32,55 @@ function showSection(sectionId) {
 }
 
 function showMessage(messageData) {
-    document.querySelector('#message-text').innerHTML = messageData.message;
+    return new Promise((resolve, reject) => {
+        CURRENT_MESSAGE = messageData;
 
-     // TODO do something with the audio file
+        document.querySelector('#message-text').innerHTML = messageData.message;
 
-     showSection('message');
+        const audio = new Audio();
+        audio.addEventListener('canplay', () => {
+            audio.play();
+        }, false);
+        audio.addEventListener('ended', err => {
+            CURRENT_MESSAGE = null;
+            resolve();
+        });
+        audio.addEventListener('error', err => {
+            reject(err);
+        });
+        audio.crossOrigin = 'anonymous';
+        audio.src = messageData.url;
+    
+        showSection('message');
+    });
+}
 
-     setTimeout(() => showSection('clock'), 2000);
+function receivedMessage(messageData) {
+    MESSAGE_QUEUE.push(messageData);
+    playNextMessage();
+}
+
+function playNextMessage() {
+    if (CURRENT_MESSAGE) {
+        return;
+    }
+
+    const messageData = MESSAGE_QUEUE.shift();
+    if (!messageData) {
+        showSection('clock');
+        return;
+    }
+
+    showMessage(messageData)
+        .then(playNextMessage, playNextMessage);
 }
 
 // Start
 window.addEventListener('load', () => {
     const socket = io();
-    socket.on('play-message', messageData => showMessage(messageData));
+    socket.on('play-message', messageData => receivedMessage(messageData));
 
     updateClocks();
     setInterval(() => updateClocks(), 1000);
     showSection('clock');
-});
+}, false);
