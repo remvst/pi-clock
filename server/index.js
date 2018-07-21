@@ -18,7 +18,11 @@ app.use('/tmp', express.static('tmp'));
 app.use('/', express.static('static'));
 
 io.on('connection', client => {
-    // setTimeout(() => playMessages(['This is a test yolo.', 'It is made of several sentences.', 'Haha this is going to be fun'], client), 1000);
+    // setTimeout(() => playMessages(['Clock is ready'], client), 1000);
+
+    client.on('test-message', () => {
+        playMessages(['Test message', 'Hopefully it\'ll work'], client);
+    });
 });
 
 server.listen(PORT, () => {

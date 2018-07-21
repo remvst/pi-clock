@@ -80,6 +80,10 @@ window.addEventListener('load', () => {
     const socket = io();
     socket.on('play-message', messageData => receivedMessage(messageData));
 
+    document.querySelector('#test-message-button').addEventListener('click', () => {
+       socket.emit('test-message');
+    });
+
     updateClocks();
     setInterval(() => updateClocks(), 1000);
     showSection('clock');
