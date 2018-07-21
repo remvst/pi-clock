@@ -32,3 +32,15 @@ body {
     text-align: center;
     font-size: 100px;
 }
+
+#message {
+    text-align: center;
+}
+
+#message .clock {
+    font-size: 25px;
+}
+
+#message p {
+    font-size: 50px;
+} 

@@ -5,6 +5,7 @@
 
         <link rel="stylesheet" href="css/style.css" />
 
+        <script src="/socket.io/socket.io.js"></script>
         <script src="js/clock.js"></script>
     </head>
 
@@ -13,6 +14,11 @@
             <div id="inner">
                 <section id="clock">
                     <h1 class="clock">00:00</h1>
+                </section>
+
+                <section id="message">
+                    <h1 class="clock">00:00</h1>
+                    <p id="message-text">This is a message</p>
                 </section>
             </div>
         </div>
