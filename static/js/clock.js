@@ -13,9 +13,9 @@ function updateClocks() {
     const now = new Date();
     const s = addZeroes(now.getHours()) + ':' + addZeroes(now.getMinutes());
 
-    document.querySelectorAll('.clock').forEach(clock => {
-        clock.innerHTML = s;
-    });
+    document.querySelectorAll('.minutes').forEach(minutes => minutes.innerHTML = addZeroes(now.getMinutes()));
+    document.querySelectorAll('.hours').forEach(hours => hours.innerHTML = addZeroes(now.getHours()));
+    document.querySelectorAll('.column').forEach(column => column.style.visibility = now.getSeconds() % 2 ? 'visible' : 'hidden');
 }
 
 function showSection(sectionId) {
@@ -85,6 +85,6 @@ window.addEventListener('load', () => {
     });
 
     updateClocks();
-    setInterval(() => updateClocks(), 1000);
+    setInterval(() => updateClocks(), 500);
     showSection('clock');
 }, false);

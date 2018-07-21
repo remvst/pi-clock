@@ -32,6 +32,10 @@ section {
     position: relative;
 }
 
+.clock .hours, .clock .minutes, .clock .column {
+    display: inline-block;
+}
+
 #clock {
     text-align: center;
     font-size: 100px;
