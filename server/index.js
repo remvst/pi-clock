@@ -63,6 +63,8 @@ const weather = new OpenWeatherMap({
     'longitude': LONGITUDE
 });
 
+const quote = new QuoteOfTheDay();
+
 // Alarm
 const alarm = new AlarmClock();
 alarm.addRecurrentAlarm(0, 10 * 3600 * 1000);
