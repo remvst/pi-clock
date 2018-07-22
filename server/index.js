@@ -32,14 +32,8 @@ app.use('/', express.static('static'));
 
 io.on('connection', client => {
     client.on('test-message', () => {
-        playMessages(['Test message', 'Hopefully it\'ll work'], client);
+        playMessages(['Test message', {'videoId': 'dQw4w9WgXcQ'}, 'Hopefully it worked'], client);
     });
-
-    setTimeout(() => {
-        playMessages([{
-            'videoId': 'M7lc1UVf-VE'
-        }, 'Hope you enjoyed the video'], client);
-    }, 2000);
 
     broadcastNextAlarm();
 });
