@@ -12,6 +12,7 @@ const Clients = require('./clients');
 const GoogleCalendar = require('./google-calendar');
 const OpenWeatherMap = require('./open-weather-map');
 const AlarmClock = require('./alarm-clock');
+const QuoteOfTheDay = require('./quote-of-the-day');
 
 const PORT = parseInt(process.env.PORT) || 5000;
 const LATITUDE = parseFloat(process.env.LATITUDE) || 0;
