@@ -73,3 +73,9 @@ section {
 #toolbar li {
     display: inline-block;
 }
+
+#close-video-button {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}

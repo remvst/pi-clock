@@ -35,6 +35,12 @@ io.on('connection', client => {
         playMessages(['Test message', 'Hopefully it\'ll work'], client);
     });
 
+    setTimeout(() => {
+        playMessages([{
+            'videoId': 'M7lc1UVf-VE'
+        }, 'Hope you enjoyed the video'], client);
+    }, 2000);
+
     broadcastNextAlarm();
 });
 
@@ -44,28 +50,38 @@ server.listen(PORT, () => {
     setInterval(checkAlarm, 1000);
 });
 
-function playMessages(messageStrings, client) {
-    Promise.all(messageStrings
-        .map(messageString => {
-            return googleTTS(messageString, 'en', 1)
-                .then(url => {
-                    const file = '/tmp/' + uuid() + '.mp3';
-                    return rp({'uri': url, 'encoding': null})
-                        .then(contents => fs.outputFile(__dirname + '/..' + file, contents))
-                        .then(() => {
-                            return {
-                                'url': file,
-                                'message': messageString
-                            };
-                        });
-                })
-        }))
+function convertMessageSettings(message) {
+    // Text message: go google translate
+    if (typeof message === 'string') {
+        return googleTTS(message, 'en', 1)
+            .then(url => {
+                const file = '/tmp/' + uuid() + '.mp3';
+                return rp({'uri': url, 'encoding': null})
+                    .then(contents => fs.outputFile(__dirname + '/..' + file, contents))
+                    .then(() => {
+                        return {
+                            'url': file,
+                            'message': message
+                        };
+                    });
+            }); 
+    }
+    
+    // Video message: send the video ID
+    if (message.videoId) {
+        return Promise.resolve({
+            'videoId': message.videoId
+        });
+    }
+
+    return Promise.reject(new Error('Invalid message'));
+}
+
+function playMessages(messages, client) {
+    Promise.all(messages.map(message => convertMessageSettings(message)))
         .then(messagesSettings => {
             messagesSettings.forEach(settings => {
-                client.emit('play-message', {
-                    'message': settings.message,
-                    'url': settings.url
-                });
+                client.emit('play-message', settings);
             });
         })
         .catch(err => console.error(err));
@@ -128,13 +144,6 @@ function cycleAlarms() {
 
         return nextTimeA.getTime() - nextTimeB.getTime();
     });
-    
-    // while (ALARM_TIMES[0].dayOfWeek !== now.getDay() || ALARM_TIMES[0].millisecondsInDay < millisecondsInDay(now)) {
-    //     const first = ALARM_TIMES.shift();
-    //     ALARM_TIMES.push(first);
-
-    //     console.log('cycling');
-    // }
 }
 
 function broadcastNextAlarm() {
