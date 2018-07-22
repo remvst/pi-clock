@@ -1,6 +1,6 @@
 'use strict';
 
-const chance = require('chance');
+const Chance = require('chance');
 
 const Script = require('./script');
 
@@ -12,6 +12,7 @@ class RandomVideoScript extends Script {
     }
 
     generateMessages() {
+        const chance = new Chance();
         return Promise.resolve([
             'Here is a random video',
             {'videoId': chance.pickone(this.videoIds)}
