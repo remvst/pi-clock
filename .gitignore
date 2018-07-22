@@ -3,3 +3,4 @@ node_modules
 tmp
 credentials.json
 token.json
+config.json

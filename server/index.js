@@ -15,6 +15,8 @@ const AlarmClock = require('./alarm-clock');
 const QuoteOfTheDay = require('./quote-of-the-day');
 const News = require('./news');
 
+const config = require('../config');
+
 const GoogleCalendarScript = require('./scripts/google-calendar-script');
 const TimeScript = require('./scripts/time-script');
 const StaticScript = require('./scripts/static-script');
@@ -23,13 +25,13 @@ const QuoteOfTheDayScript = require('./scripts/quote-of-the-day-script');
 const NewsScript = require('./scripts/news-script');
 const RandomVideoScript = require('./scripts/random-video-script');
 
-const PORT = parseInt(process.env.PORT) || 5000;
-const LATITUDE = parseFloat(process.env.LATITUDE) || 0;
-const LONGITUDE = parseFloat(process.env.LONGITUDE) || 0;
-const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
-const NEWS_API_KEY = process.env.NEWS_API_KEY;
-const CREDENTIALS_PATH = process.env.CREDENTIALS_PATH || 'credentials.json';
-const TOKEN_PATH = process.env.TOKEN_PATH || 'token.json';
+const PORT = parseInt(config.PORT) || 5000;
+const LATITUDE = parseFloat(config.LATITUDE) || 0;
+const LONGITUDE = parseFloat(config.LONGITUDE) || 0;
+const WEATHER_API_KEY = config.WEATHER_API_KEY;
+const NEWS_API_KEY = config.NEWS_API_KEY;
+const CREDENTIALS_PATH = config.CREDENTIALS_PATH || 'credentials.json';
+const TOKEN_PATH = config.TOKEN_PATH || 'token.json';
 
 const VIDEOS = [
     'dQw4w9WgXcQ',
