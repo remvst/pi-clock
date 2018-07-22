@@ -38,7 +38,18 @@ section {
 
 #clock {
     text-align: center;
+}
+
+#clock .date {
+    font-size: 25px;
+}
+
+#clock .clock {
     font-size: 100px;
+}
+
+#clock .countdown {
+    font-size: 25px;
 }
 
 #message {

@@ -15,8 +15,13 @@ const io = socketIO.listen(server);
 const PORT = parseInt(process.env.PORT) || 5000;
 
 const ALARM_TIMES = [
-    // {'dayOfWeek': 6, 'millisecondsInDay': 10 * 24 * 3600},
-    {'dayOfWeek': 6, 'millisecondsInDay': millisecondsInDay(new Date()) + 10000}
+    {'dayOfWeek': 0, 'millisecondsInDay': 10 * 3600 * 1000},
+    {'dayOfWeek': 1, 'millisecondsInDay': 8.5 * 3600 * 1000},
+    {'dayOfWeek': 2, 'millisecondsInDay': 8.5 * 3600 * 1000},
+    {'dayOfWeek': 3, 'millisecondsInDay': 8.5 * 3600 * 1000},
+    {'dayOfWeek': 4, 'millisecondsInDay': 8.5 * 3600 * 1000},
+    {'dayOfWeek': 5, 'millisecondsInDay': 8.5 * 3600 * 1000},
+    {'dayOfWeek': 6, 'millisecondsInDay': 10 * 3600 * 1000},
 ];
 
 let LAST_ALARM_CHECK = new Date();
@@ -26,12 +31,11 @@ app.use('/tmp', express.static('tmp'));
 app.use('/', express.static('static'));
 
 io.on('connection', client => {
-    // setTimeout(() => playMessages(['Clock is ready'], client), 1000);
-
     client.on('test-message', () => {
         playMessages(['Test message', 'Hopefully it\'ll work'], client);
     });
-    checkAlarm();
+
+    broadcastNextAlarm();
 });
 
 server.listen(PORT, () => {
@@ -83,6 +87,10 @@ function ring() {
             playMessages(['Time to ring'], client);
         });
     });
+
+    cycleAlarms();
+
+    broadcastNextAlarm();
 }
 
 function checkAlarm() {
@@ -105,4 +113,66 @@ function checkAlarm() {
     }
 
     LAST_ALARM_CHECK = now;
+}
+
+function cycleAlarms() {
+    const now = new Date();
+
+    if (ALARM_TIMES.length <= 1) {
+        return;
+    }
+
+    ALARM_TIMES.sort((a, b) => {
+        const nextTimeA = nextAlarmTime(a);
+        const nextTimeB = nextAlarmTime(b);
+
+        return nextTimeA.getTime() - nextTimeB.getTime();
+    });
+    
+    // while (ALARM_TIMES[0].dayOfWeek !== now.getDay() || ALARM_TIMES[0].millisecondsInDay < millisecondsInDay(now)) {
+    //     const first = ALARM_TIMES.shift();
+    //     ALARM_TIMES.push(first);
+
+    //     console.log('cycling');
+    // }
+}
+
+function broadcastNextAlarm() {
+    const nextAlarm = nextAlarmTime(nextAlarmSetting());
+
+    io.sockets.clients((err, clients) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        clients.forEach(socketId => {
+            const client = io.sockets.connected[socketId];
+            client.emit('next-alarm', {
+                'time': nextAlarm.getTime()
+            });
+        });
+    });
+}
+
+function nextAlarmSetting() {
+    cycleAlarms();
+    return ALARM_TIMES[0];
+}
+
+function nextAlarmTime(setting) {
+    const now = new Date();
+    const currentDay = now.getDay();
+
+    let dayDifference = setting.dayOfWeek - currentDay;
+    while (dayDifference < 0 || dayDifference === 0 && millisecondsInDay(now) > setting.millisecondsInDay) {
+        dayDifference += 7;
+    }
+
+    // Create a date at that day
+    const date = new Date(now.getTime() + dayDifference * 24 * 3600 * 1000);
+    date.setHours(0, 0, 0, 0);
+    date.setMilliseconds(setting.millisecondsInDay);
+
+    return date;
 }
