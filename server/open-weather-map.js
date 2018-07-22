@@ -10,7 +10,7 @@ class OpenWeatherMap {
         this.longitude = options.longitude;
     }
 
-    fetchForecast(lat, lon) {
+    fetchForecast() {
         const url = 'http://api.openweathermap.org/data/2.5/forecast?lat=' + this.latitude + '&lon=' + this.longitude + '&APPID=' + this.apiKey;
     
         return rp({

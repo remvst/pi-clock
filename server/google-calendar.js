@@ -18,7 +18,6 @@ class GoogleCalendar {
     }
 
     authorize() {
-        console.log('authorizing');
         return fs.readFile(this.credentialsPath)
             .then(content => this.getToken(JSON.parse(content)));
     }
@@ -26,8 +25,6 @@ class GoogleCalendar {
     getToken(credentials) {
         const {client_secret, client_id, redirect_uris} = credentials.installed;
         this.client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-
-        console.log('gettoken');
         
         // Check if we have previously stored a token
         return fs.readFile(this.tokenPath)

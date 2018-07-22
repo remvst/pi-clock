@@ -13,11 +13,20 @@ const GoogleCalendar = require('./google-calendar');
 const OpenWeatherMap = require('./open-weather-map');
 const AlarmClock = require('./alarm-clock');
 const QuoteOfTheDay = require('./quote-of-the-day');
+const News = require('./news');
+
+const GoogleCalendarScript = require('./scripts/google-calendar-script');
+const TimeScript = require('./scripts/time-script');
+const StaticScript = require('./scripts/static-script');
+const WeatherScript = require('./scripts/weather-script');
+const QuoteOfTheDayScript = require('./scripts/quote-of-the-day-script');
+const NewsScript = require('./scripts/news-script');
 
 const PORT = parseInt(process.env.PORT) || 5000;
 const LATITUDE = parseFloat(process.env.LATITUDE) || 0;
 const LONGITUDE = parseFloat(process.env.LONGITUDE) || 0;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const CREDENTIALS_PATH = process.env.CREDENTIALS_PATH || 'credentials.json';
 const TOKEN_PATH = process.env.TOKEN_PATH || 'token.json';
 
@@ -65,6 +74,22 @@ const weather = new OpenWeatherMap({
 
 const quote = new QuoteOfTheDay();
 
+const news = new News({
+    'apiKey': NEWS_API_KEY,
+    'source': 'bbc-news'
+});
+
+// Scripts
+const scripts = [
+    new StaticScript(['Good morning Remi']),
+    new TimeScript(),
+    new GoogleCalendarScript(gc),
+    new WeatherScript(weather),
+    new NewsScript(news),
+    new QuoteOfTheDayScript(quote),
+    new StaticScript(['Have an amazing day'])
+];
+
 // Alarm
 const alarm = new AlarmClock();
 alarm.addRecurrentAlarm(0, 10 * 3600 * 1000);
@@ -74,11 +99,25 @@ alarm.addRecurrentAlarm(3, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(4, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(5, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(6, 10 * 3600 * 1000);
-alarm.addRecurrentAlarm(0, alarm.millisecondsInDay(new Date()) + 5000);
+// alarm.addRecurrentAlarm(0, alarm.millisecondsInDay(new Date()) + 5000);
 
 alarm.ringCallback = () => {
-    clients.forEach(client => {
-        playMessages(['Time to ring'], client);
+
+    Promise.all(scripts.map(script => {
+        return script.generateMessages()
+            .catch(err => {
+                console.error(err);
+                return ['Script error'];
+            });
+    })).then(results => {
+        let messages = [];
+        results.forEach(result => {
+            messages = messages.concat(result);
+        })
+        console.log(messages);
+        clients.forEach(client => {
+            playMessages(messages, client);
+        });
     });
 
     broadcastNextAlarm();
