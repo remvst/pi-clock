@@ -21,6 +21,7 @@ const StaticScript = require('./scripts/static-script');
 const WeatherScript = require('./scripts/weather-script');
 const QuoteOfTheDayScript = require('./scripts/quote-of-the-day-script');
 const NewsScript = require('./scripts/news-script');
+const RandomVideoScript = require('./scripts/random-video-script');
 
 const PORT = parseInt(process.env.PORT) || 5000;
 const LATITUDE = parseFloat(process.env.LATITUDE) || 0;
@@ -29,6 +30,34 @@ const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 const CREDENTIALS_PATH = process.env.CREDENTIALS_PATH || 'credentials.json';
 const TOKEN_PATH = process.env.TOKEN_PATH || 'token.json';
+
+const VIDEOS = [
+    'dQw4w9WgXcQ',
+    '8-tAYdL63uw',
+    'yZoipSt8POI',
+    'DZ2NHJzFXf0',
+    'UpLg4FpGB38',
+    'RunGP6vLzWQ',
+    'oC-GflRB0y4',
+    'JflsBihO_MQ',
+    'JaqLOsO6dTw',
+    'TXBPBatJlPo',
+    '5PpmHYKEXhE',
+    '_Yhyp-_hX2s',
+    'ytQ5CYE1VZw',
+    'BuJDaOVz2qY',
+    '_CL6n0FJZpk',
+    '_DT-4-jJTZc',
+    'V3t8eVVgQJo',
+    'ef2nDwPijhU',
+    'SNE2oCZH_4k',
+    'MV_3Dpw-BRY',
+    'i1BDGqIfm8U',
+    'tVgMNI1zt74',
+    'Y9AAHjzFAPI',
+    'juOrtJ3xHZA',
+    'Ss1tZdy2cXs'
+];
 
 const app = express();
 const server = Server(app);
@@ -87,6 +116,7 @@ const scripts = [
     new WeatherScript(weather),
     new NewsScript(news),
     new QuoteOfTheDayScript(quote),
+    new RandomVideoScript(VIDEOS),
     new StaticScript(['Have an amazing day'])
 ];
 
