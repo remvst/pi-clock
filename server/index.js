@@ -13,6 +13,9 @@ const server = Server(app);
 const io = socketIO.listen(server);
 
 const PORT = parseInt(process.env.PORT) || 5000;
+const LATITUDE = parseFloat(process.env.LATITUDE) || 0;
+const LONGITUDE = parseFloat(process.env.LONGITUDE) || 0;
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
 
 const ALARM_TIMES = [
     {'dayOfWeek': 0, 'millisecondsInDay': 10 * 3600 * 1000},
@@ -36,12 +39,14 @@ io.on('connection', client => {
     });
 
     broadcastNextAlarm();
+    broadcastWeather();
 });
 
 server.listen(PORT, () => {
     console.log('Server started');
 
     setInterval(checkAlarm, 1000);
+    setInterval(broadcastWeather, 30000);
 });
 
 function convertMessageSettings(message) {
@@ -178,4 +183,30 @@ function nextAlarmTime(setting) {
     date.setMilliseconds(setting.millisecondsInDay);
 
     return date;
+}
+
+function fetchWeather() {
+    const url = 'http://api.openweathermap.org/data/2.5/forecast?lat=' + LATITUDE + '&lon=' + LONGITUDE + '&APPID=' + WEATHER_API_KEY;
+
+    return rp({
+        'uri': url,
+        'json': true
+    });
+}
+
+function broadcastWeather() {
+    fetchWeather()
+        .then(weather => {
+            io.sockets.clients((err, clients) => {
+                if (err) {
+                    console.error(err);
+                    return;
+                }
+        
+                clients.forEach(socketId => {
+                    const client = io.sockets.connected[socketId];
+                    client.emit('weather', weather);
+                });
+            });
+        });
 }

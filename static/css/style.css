@@ -51,7 +51,18 @@ section {
 }
 
 #clock .countdown {
-    font-size: 25px;
+    font-size: 10px;
+}
+
+#clock .weather {
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+#clock .weather img {
+    width: 35px;
+    height: 35px;
+    vertical-align: middle;
 }
 
 #message {

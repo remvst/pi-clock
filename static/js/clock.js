@@ -42,7 +42,7 @@ function updateClocks() {
         const seconds = Math.floor((diff - minutes * MINUTE - hours * HOUR - days * DAY) / SECOND);
 
         document.querySelectorAll('.countdown').forEach(countdown => {
-            countdown.innerHTML = days + 'd, ' + hours + 'h, ' + minutes + 'm, ' + seconds + 's';
+            countdown.innerHTML = 'Alarm in ' + days + 'd, ' + hours + 'h, ' + minutes + 'm, ' + seconds + 's';
         });
     }
 }
@@ -162,6 +162,38 @@ function stopVideo() {
     }
 }
 
+function toCelsius(kelvin) {
+    return kelvin - 273.15;
+}
+
+function receivedWeather(weather) {
+    let maxTemperature = Number.MIN_SAFE_INTEGER;
+    let minTemperature = Number.MAX_SAFE_INTEGER;
+
+    const weatherTypeIds = new Set();
+
+    weather.list.slice(0, 4).forEach(chunk => {
+        maxTemperature = Math.max(maxTemperature, chunk.main.temp_max);
+        minTemperature = Math.min(minTemperature, chunk.main.temp_min);
+
+        weatherTypeIds.add(chunk.weather[0].icon);
+    });
+
+    document.querySelectorAll('.weather').forEach(node => {
+        node.innerHTML = '';
+
+        const temperatures = document.createElement('temperatures');
+        temperatures.innerHTML = 'H: ' + Math.round(toCelsius(maxTemperature)) + '°, L: ' + Math.round(toCelsius(minTemperature)) + '°';
+        node.appendChild(temperatures);
+    
+        weatherTypeIds.forEach(weatherTypeId => {
+            const icon = new Image();
+            icon.src = 'http://openweathermap.org/img/w/' + weatherTypeId + '.png';
+            node.appendChild(icon);
+        });
+    });
+}
+
 // Start
 window.addEventListener('load', () => {
     const tag = document.createElement('script');
@@ -173,6 +205,7 @@ window.addEventListener('load', () => {
     const socket = io();
     socket.on('play-message', messageData => receivedMessage(messageData));
     socket.on('next-alarm', messageData => receivedNextAlarm(messageData));
+    socket.on('weather', weather => receivedWeather(weather));
 
     document.querySelector('#test-message-button').addEventListener('click', () => {
         socket.emit('test-message');
