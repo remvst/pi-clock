@@ -8,6 +8,8 @@ const rp = require('request-promise');
 const fs = require('fs-extra');
 const uuid = require('uuid4');
 
+const GoogleCalendar = require('./google-calendar');
+
 const app = express();
 const server = Server(app);
 const io = socketIO.listen(server);
@@ -16,6 +18,18 @@ const PORT = parseInt(process.env.PORT) || 5000;
 const LATITUDE = parseFloat(process.env.LATITUDE) || 0;
 const LONGITUDE = parseFloat(process.env.LONGITUDE) || 0;
 const WEATHER_API_KEY = process.env.WEATHER_API_KEY;
+const CREDENTIALS_PATH = process.env.CREDENTIALS_PATH || 'credentials.json';
+const TOKEN_PATH = process.env.TOKEN_PATH || 'token.json';
+
+const gc = new GoogleCalendar({
+    'credentialsPath': CREDENTIALS_PATH,
+    'tokenPath': TOKEN_PATH
+});
+
+gc.events(new Date(), new Date(Date.now() + 24 * 3600 * 1000))
+    .then(events => {
+        console.log(events);
+    });
 
 const ALARM_TIMES = [
     {'dayOfWeek': 0, 'millisecondsInDay': 10 * 3600 * 1000},

@@ -1,3 +1,5 @@
 node_modules
 .env
 tmp
+credentials.json
+token.json
