@@ -4,8 +4,11 @@ class AlarmClock {
 
     constructor() {
         this.alarmSettings = [];
-        this.lastTick = new Date();
         this.ringCallback = null;
+
+        this.currentDate = () => new Date();
+
+        this.nextAlarm = null;
     }
 
     addRecurrentAlarm(dayOfWeek, millisecondsInDay) {
@@ -20,6 +23,8 @@ class AlarmClock {
 
             return nextTimeA.getTime() - nextTimeB.getTime();
         });
+
+        this.nextAlarm = this.nextAlarmTime();
     }
 
     nextAlarmTime() {
@@ -31,7 +36,7 @@ class AlarmClock {
     }
     
     nextRingingTime(setting) {
-        const now = new Date();
+        const now = this.currentDate();
         const currentDay = now.getDay();
 
         let dayDifference = setting.dayOfWeek - currentDay;
@@ -40,7 +45,7 @@ class AlarmClock {
         }
 
         // Create a date at that day
-        const date = new Date(now.getTime() + dayDifference * 24 * 3600 * 1000);
+        const date = new Date(this.currentDate().getTime() + dayDifference * 24 * 3600 * 1000);
         date.setHours(0, 0, 0, 0);
         date.setMilliseconds(setting.millisecondsInDay);
 
@@ -52,23 +57,17 @@ class AlarmClock {
     }
     
     tick() {
-        const now = new Date();
+        const previousNextAlarm = this.nextAlarm;
+        this.sortAlarms();
 
-        const nextAlarm = this.alarmSettings[0];
-        const before = this.millisecondsInDay(this.lastTick) - nextAlarm.millisecondsInDay > 0;
-        const after = this.millisecondsInDay(now) - nextAlarm.millisecondsInDay > 0;
-                
-        if (before === after) {
+        if (previousNextAlarm.getTime() === this.nextAlarm.getTime()) {
             return;
         }
 
         this.ring();
-
-        this.lastTick = now;
     }
 
     ring() {
-        this.sortAlarms();
         console.log('Ringing');
 
         if (this.ringCallback) {

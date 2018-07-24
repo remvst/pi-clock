@@ -131,7 +131,7 @@ alarm.addRecurrentAlarm(3, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(4, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(5, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(6, 10 * 3600 * 1000);
-alarm.addRecurrentAlarm(0, alarm.millisecondsInDay(new Date()) + 5000);
+// alarm.addRecurrentAlarm(0, alarm.millisecondsInDay(new Date()) + 5000);
 
 alarm.ringCallback = () => {
 
