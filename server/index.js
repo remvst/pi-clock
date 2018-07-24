@@ -33,34 +33,6 @@ const NEWS_API_KEY = config.NEWS_API_KEY;
 const CREDENTIALS_PATH = config.CREDENTIALS_PATH || 'credentials.json';
 const TOKEN_PATH = config.TOKEN_PATH || 'token.json';
 
-const VIDEOS = [
-    'dQw4w9WgXcQ',
-    '8-tAYdL63uw',
-    'yZoipSt8POI',
-    'DZ2NHJzFXf0',
-    'UpLg4FpGB38',
-    'RunGP6vLzWQ',
-    'oC-GflRB0y4',
-    'JflsBihO_MQ',
-    'JaqLOsO6dTw',
-    'TXBPBatJlPo',
-    '5PpmHYKEXhE',
-    '_Yhyp-_hX2s',
-    'ytQ5CYE1VZw',
-    'BuJDaOVz2qY',
-    '_CL6n0FJZpk',
-    '_DT-4-jJTZc',
-    'V3t8eVVgQJo',
-    'ef2nDwPijhU',
-    'SNE2oCZH_4k',
-    'MV_3Dpw-BRY',
-    'i1BDGqIfm8U',
-    'tVgMNI1zt74',
-    'Y9AAHjzFAPI',
-    'juOrtJ3xHZA',
-    'Ss1tZdy2cXs'
-];
-
 const app = express();
 const server = Server(app);
 const io = socketIO.listen(server);
@@ -118,7 +90,7 @@ const scripts = [
     new WeatherScript(weather),
     new NewsScript(news),
     new QuoteOfTheDayScript(quote),
-    new RandomVideoScript(VIDEOS),
+    new RandomVideoScript(config.VIDEO_IDS),
     new StaticScript(['Have an amazing day'])
 ];
 
@@ -131,7 +103,7 @@ alarm.addRecurrentAlarm(3, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(4, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(5, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(6, 10 * 3600 * 1000);
-// alarm.addRecurrentAlarm(0, alarm.millisecondsInDay(new Date()) + 5000);
+// alarm.addRecurrentAlarm(2, alarm.millisecondsInDay(new Date()) + 5000);
 
 alarm.ringCallback = () => {
 
@@ -169,7 +141,7 @@ function convertMessageSettings(message) {
                             'message': message
                         };
                     });
-            }); 
+            });
     }
     
     // Video message: send the video ID
@@ -183,7 +155,7 @@ function convertMessageSettings(message) {
 }
 
 function playMessages(messages, client) {
-    Promise.all(messages.map(message => convertMessageSettings(message)))
+    Promise.all(messages.filter(m => m).map(message => convertMessageSettings(message)))
         .then(messagesSettings => {
             messagesSettings.forEach(settings => {
                 client.emit('play-message', settings);

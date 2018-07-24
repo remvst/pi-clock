@@ -13,9 +13,8 @@ class QuoteOfTheDayScript extends Script {
         return this.quoteOfTheDay.fetchQuote()
             .then(data => {
                 return [
-                    'Quote of the day by ' + data.contents.quotes[0].author,
-                    data.contents.quotes[0].quote
-                ];
+                    'Quote of the day by ' + data.contents.quotes[0].author
+                ].concat(data.contents.quotes[0].quote.split('.'));
             });
     }
 
