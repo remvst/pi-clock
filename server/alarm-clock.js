@@ -12,11 +12,25 @@ class AlarmClock {
     }
 
     addRecurrentAlarm(dayOfWeek, millisecondsInDay) {
-        this.alarmSettings.push({'dayOfWeek': dayOfWeek, 'millisecondsInDay': millisecondsInDay});
+        this.alarmSettings.push({
+            'type': 'recurrent',
+            'dayOfWeek': dayOfWeek, 
+            'millisecondsInDay': millisecondsInDay
+        });
+        this.sortAlarms();
+    }
+
+    addOneTimeAlarm(date) {
+        this.alarmSettings.push({
+            'type': 'oneTime',
+            'date': date
+        });
         this.sortAlarms();
     }
 
     sortAlarms() {
+        this.alarmSettings = this.alarmSettings.filter(setting => this.nextRingingTime(setting) !== null);
+
         this.alarmSettings.sort((a, b) => {
             const nextTimeA = this.nextRingingTime(a);
             const nextTimeB = this.nextRingingTime(b);
@@ -36,20 +50,24 @@ class AlarmClock {
     }
     
     nextRingingTime(setting) {
-        const now = this.currentDate();
-        const currentDay = now.getDay();
+        if (setting.type === 'recurrent') {
+            const now = this.currentDate();
+            const currentDay = now.getDay();
 
-        let dayDifference = setting.dayOfWeek - currentDay;
-        while (dayDifference < 0 || dayDifference === 0 && this.millisecondsInDay(now) > setting.millisecondsInDay) {
-            dayDifference += 7;
+            let dayDifference = setting.dayOfWeek - currentDay;
+            while (dayDifference < 0 || dayDifference === 0 && this.millisecondsInDay(now) > setting.millisecondsInDay) {
+                dayDifference += 7;
+            }
+
+            // Create a date at that day
+            const date = new Date(this.currentDate().getTime() + dayDifference * 24 * 3600 * 1000);
+            date.setHours(0, 0, 0, 0);
+            date.setMilliseconds(setting.millisecondsInDay);
+
+            return date;
+        } else if (setting.type === 'oneTime') {
+            return setting.date.getTime() < this.currentDate().getTime() ? null : setting.date;
         }
-
-        // Create a date at that day
-        const date = new Date(this.currentDate().getTime() + dayDifference * 24 * 3600 * 1000);
-        date.setHours(0, 0, 0, 0);
-        date.setMilliseconds(setting.millisecondsInDay);
-
-        return date;
     }
 
     millisecondsInDay(date) {

@@ -103,10 +103,13 @@ alarm.addRecurrentAlarm(3, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(4, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(5, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(6, 10 * 3600 * 1000);
-alarm.addRecurrentAlarm(2, alarm.millisecondsInDay(new Date()) + 5000);
+// alarm.addRecurrentAlarm(2, alarm.millisecondsInDay(new Date()) + 5000);
+// alarm.addOneTimeAlarm(new Date(Date.now() + 5000));
+
+console.log(alarm.nextAlarmTime());
+console.log(alarm.alarmSettings);
 
 alarm.ringCallback = () => {
-
     Promise.all(scripts.map(script => {
         return script.generateMessages()
             .catch(err => {
