@@ -7,6 +7,8 @@ const googleTTS = require('google-tts-api');
 const rp = require('request-promise');
 const fs = require('fs-extra');
 const uuid = require('uuid4');
+const NodeWebcam = require('node-webcam');
+const moment = require('moment');
 
 const Clients = require('./clients');
 const GoogleCalendar = require('./google-calendar');
@@ -45,6 +47,16 @@ app.use('/', express.static('static'));
 io.on('connection', client => {
     client.on('test-message', () => {
         playMessages(['Test message', {'videoId': 'dQw4w9WgXcQ'}, 'Hopefully it worked'], client);
+    });
+
+    client.on('timelapse', () => {
+        const duration = 10 * 60;
+        const framerate = 10 / 60;
+
+        playMessages(['Starting timelapse for ' + Math.round(duration / 60) + ' minutes at ' + (Math.round(framerate * 100) / 100) + ' FPS'], client);
+
+        makeTimelapse(duration, framerate)
+            .then(() => playMessages(['Timelapse is ready'], client));
     });
 
     broadcastNextAlarm();
@@ -105,9 +117,6 @@ alarm.addRecurrentAlarm(5, 8.5 * 3600 * 1000);
 alarm.addRecurrentAlarm(6, 10 * 3600 * 1000);
 // alarm.addRecurrentAlarm(2, alarm.millisecondsInDay(new Date()) + 5000);
 // alarm.addOneTimeAlarm(new Date(Date.now() + 5000));
-
-console.log(alarm.nextAlarmTime());
-console.log(alarm.alarmSettings);
 
 alarm.ringCallback = () => {
     Promise.all(scripts.map(script => {
@@ -180,4 +189,56 @@ function broadcastWeather() {
         .then(weather => {
             clients.forEach(client => client.emit('weather', weather));
         });
+}
+
+function makeTimelapse(duration, fps) {
+    const camera = NodeWebcam.create({
+        width: 1280,
+        height: 720,
+        quality: 100,
+        delay: 0,
+        saveShots: false,
+        skip: 1,
+        output: 'jpeg',
+        callbackReturn: "location",
+        verbose: true
+    });
+
+    const frames = duration * fps;
+    const maxFrameIdLength = Math.max(frames.toString().length, 4);
+    const folder = 'frames/' + moment(new Date()).format('YYYY-MM-DD');
+
+    return fs.mkdirp(folder)
+        .then(() => {
+            const promises = [];
+            for (let i = 0 ; i < frames ; i++) {
+                // throw new Error();
+                promises.push((function(i) {
+                    return new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            camera.capture(folder + '/frame-' + addZeroes(i, maxFrameIdLength), (err, data) => {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    resolve(data);
+                                }
+                            });
+                        }, i * (1 / fps) * 1000);
+                    });
+                })(i));
+            }
+
+            return Promise.all(promises)
+        })
+        .then(() => {
+            console.log('Timelapse frames are ready');
+        });
+}
+
+function addZeroes(x, n = 2) {
+    x = x.toString();
+    while (x.length < n) {
+        x = '0' + x;
+    }
+    return x;
 }

@@ -16,6 +16,7 @@
     "google-tts-api": "0.0.2",
     "googleapis": "^27.0.0",
     "moment": "^2.22.2",
+    "node-webcam": "^0.4.3",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
     "socket.io": "^2.1.1",
