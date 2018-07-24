@@ -207,7 +207,7 @@ function makeTimelapse(duration, fps) {
 
     const frames = duration * fps;
     const maxFrameIdLength = Math.max(frames.toString().length, 4);
-    const folder = 'frames/' + moment(new Date()).format('YYYY-MM-DD');
+    const folder = 'frames/' + moment(new Date()).utc().format();
 
     return fs.mkdirp(folder)
         .then(() => {
