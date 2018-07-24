@@ -1,5 +1,7 @@
 'use strict';
 
+const moment = require('moment');
+
 const Script = require('./script');
 
 class GoogleCalendarScript extends Script {
@@ -29,8 +31,7 @@ class GoogleCalendarScript extends Script {
 
                     let eventTime;
                     if (event.start.dateTime) {
-                        const date = new Date(event.start.dateTime);
-                        eventTime = 'at ' + date.getHours() + ':' + date.getMinutes();
+                        eventTime = 'at ' + moment(event.start.dateTime).format('LT')
                     } else {
                         eventTime = 'the whole day';
                     }
