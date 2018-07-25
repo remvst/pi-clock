@@ -45,29 +45,6 @@ const clients = new Clients(io);
 app.use('/tmp', express.static('tmp'));
 app.use('/', express.static('static'));
 
-io.on('connection', client => {
-    client.on('test-message', () => {
-        playMessages(['Test message', {'videoId': 'dQw4w9WgXcQ'}, 'Hopefully it worked'], client);
-    });
-
-    client.on('timelapse', () => {
-        const duration = 10 * 60;
-        const framerate = 10 / 60;
-
-        playMessages(['Starting timelapse for ' + Math.round(duration / 60) + ' minutes at ' + (Math.round(framerate * 100) / 100) + ' FPS'], client);
-
-        makeTimelapse(duration, framerate)
-            .then(() => playMessages(['Timelapse is ready'], client));
-    });
-
-    client.on('hello', () => {
-        playMessages(['PI clock connected'], client);
-    });
-
-    broadcastNextAlarm();
-    broadcastWeather();
-});
-
 server.listen(PORT, () => {
     console.log('Server started');
 
@@ -143,6 +120,33 @@ alarm.ringCallback = () => {
 
     broadcastNextAlarm();
 };
+
+io.on('connection', client => {
+    client.on('test-message', () => {
+        playMessages(['Test message', {'videoId': 'dQw4w9WgXcQ'}, 'Hopefully it worked'], client);
+    });
+
+    client.on('timelapse', () => {
+        const duration = 10 * 60;
+        const framerate = 10 / 60;
+
+        playMessages(['Starting timelapse for ' + Math.round(duration / 60) + ' minutes at ' + (Math.round(framerate * 100) / 100) + ' FPS'], client);
+
+        makeTimelapse(duration, framerate)
+            .then(() => playMessages(['Timelapse is ready'], client));
+    });
+
+    client.on('hello', () => {
+        playMessages(['PI clock connected'], client);
+    });
+
+    client.on('alarm', () => {
+        alarm.ringCallback();
+    });
+
+    broadcastNextAlarm();
+    broadcastWeather();
+});
 
 function convertMessageSettings(message) {
     // Text message: go google translate

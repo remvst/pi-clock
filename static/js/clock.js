@@ -215,6 +215,10 @@ window.addEventListener('load', () => {
         socket.emit('timelapse');
     });
 
+    document.querySelector('#alarm').addEventListener('click', () => {
+        socket.emit('alarm');
+    });
+
     document.querySelector('#close-video-button').addEventListener('click', () => {
         stopVideo();
     });
