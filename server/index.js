@@ -158,7 +158,8 @@ io.on('connection', client => {
     });
 
     client.on('alarm', () => {
-        alarm.ringCallback();
+        playMessages(['Triggering alarm messages...'], client);
+        alarm.ringCallback({'type': 'alarm'});
     });
 
     broadcastNextAlarm();
