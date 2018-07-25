@@ -8,22 +8,26 @@ class AlarmClock {
 
         this.currentDate = () => new Date();
 
-        this.nextAlarm = null;
+        this.nextAlarmTimes = null;
     }
 
-    addRecurrentAlarm(dayOfWeek, millisecondsInDay) {
+    addRecurrentAlarm(label, dayOfWeek, millisecondsInDay, payload) {
         this.alarmSettings.push({
             'type': 'recurrent',
+            'label': label,
             'dayOfWeek': dayOfWeek, 
-            'millisecondsInDay': millisecondsInDay
+            'millisecondsInDay': millisecondsInDay,
+            'payload': payload
         });
         this.sortAlarms();
     }
 
-    addOneTimeAlarm(date) {
+    addOneTimeAlarm(label, date, payload) {
         this.alarmSettings.push({
             'type': 'oneTime',
-            'date': date
+            'label': label,
+            'date': date,
+            'payload': payload
         });
         this.sortAlarms();
     }
@@ -38,7 +42,12 @@ class AlarmClock {
             return nextTimeA.getTime() - nextTimeB.getTime();
         });
 
-        this.nextAlarm = this.nextAlarmTime();
+        this.nextAlarmTimes = this.alarmSettings.map(setting => {
+            return {
+                'time': this.nextRingingTime(setting),
+                'setting': setting
+            };
+        });
     }
 
     nextAlarmTime() {
@@ -75,21 +84,27 @@ class AlarmClock {
     }
     
     tick() {
-        const previousNextAlarm = this.nextAlarm;
+        const previousNextAlarmTimes = this.nextAlarmTimes;
         this.sortAlarms();
 
-        if (previousNextAlarm.getTime() === this.nextAlarm.getTime()) {
+        if (previousNextAlarmTimes[0].time === this.nextAlarmTimes[0].time) {
             return;
         }
 
-        this.ring();
+        // Ring for all the alarms that are now passed
+        let i = 0;
+        const now = Date.now();
+        while (i < previousNextAlarmTimes.length && now >= previousNextAlarmTimes[i].time) {
+            this.ring(previousNextAlarmTimes[i].setting);
+            i++;
+        }
     }
 
-    ring() {
-        console.log('Ringing');
+    ring(setting) {
+        console.log('Ringing: ' + setting.label);
 
         if (this.ringCallback) {
-            this.ringCallback();
+            this.ringCallback(setting.payload);
         }
     }
 

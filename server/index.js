@@ -90,35 +90,52 @@ const scripts = [
 
 // Alarm
 const alarm = new AlarmClock();
-alarm.addRecurrentAlarm(0, 10 * 3600 * 1000);
-alarm.addRecurrentAlarm(1, 8.5 * 3600 * 1000);
-alarm.addRecurrentAlarm(2, 8.5 * 3600 * 1000);
-alarm.addRecurrentAlarm(3, 8.5 * 3600 * 1000);
-alarm.addRecurrentAlarm(4, 8.5 * 3600 * 1000);
-alarm.addRecurrentAlarm(5, 8.5 * 3600 * 1000);
-alarm.addRecurrentAlarm(6, 10 * 3600 * 1000);
+
+alarm.addRecurrentAlarm('Sunday schedule', 0, 0, {'type': 'day-start'});
+alarm.addRecurrentAlarm('Monday schedule', 1, 0, {'type': 'day-start'});
+alarm.addRecurrentAlarm('Tuesday schedule', 2, 0, {'type': 'day-start'});
+alarm.addRecurrentAlarm('Wednesday schedule', 3, 0, {'type': 'day-start'});
+alarm.addRecurrentAlarm('Thursday schedule', 4, 0, {'type': 'day-start'});
+alarm.addRecurrentAlarm('Friday schedule', 5, 0, {'type': 'day-start'});
+alarm.addRecurrentAlarm('Saturday schedule', 6, 0, {'type': 'day-start'});
+
+alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Tuesday morning', 2, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Wednesday morning', 3, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Thursday morning', 4, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Friday morning', 5, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000, {'type': 'alarm'});
 // alarm.addRecurrentAlarm(2, alarm.millisecondsInDay(new Date()) + 5000);
-// alarm.addOneTimeAlarm(new Date(Date.now() + 5000));
+// alarm.addOneTimeAlarm('testing', new Date(Date.now() + 5000), {'foo': 'bar'});
 
-alarm.ringCallback = () => {
-    Promise.all(scripts.map(script => {
-        return script.generateMessages()
-            .catch(err => {
-                console.error(err);
-                return ['Script error'];
+alarm.ringCallback = event => {
+    if (event.type === 'alarm') {
+        Promise.all(scripts.map(script => {
+            return script.generateMessages()
+                .catch(err => {
+                    console.error(err);
+                    return ['Script error'];
+                });
+        })).then(results => {
+            let messages = [];
+            results.forEach(result => {
+                messages = messages.concat(result);
+            })
+            console.log(messages);
+            clients.forEach(client => {
+                playMessages(messages, client);
             });
-    })).then(results => {
-        let messages = [];
-        results.forEach(result => {
-            messages = messages.concat(result);
-        })
-        console.log(messages);
-        clients.forEach(client => {
-            playMessages(messages, client);
         });
-    });
 
-    broadcastNextAlarm();
+        broadcastNextAlarm();
+    } else if (event.type === 'event') {
+        clients.forEach(client => {
+            playMessages(['Event starting now', event.title], client);
+        });
+    } else if (event.type === 'day-start') {
+        setupAlarmsForToday();
+    }
 };
 
 io.on('connection', client => {
@@ -147,6 +164,31 @@ io.on('connection', client => {
     broadcastNextAlarm();
     broadcastWeather();
 });
+
+setupAlarmsForToday();
+
+function setupAlarmsForToday() {
+    const dayStart = new Date();
+    dayStart.setHours(0);
+    dayStart.setMinutes(0);
+    dayStart.setSeconds(0);
+    dayStart.setMilliseconds(0);
+
+    const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+
+    return gc.events(dayStart, dayEnd)
+        .then(items => {
+            items.forEach(event => {
+                // Use either the event time or 9AM
+                const eventTime = event.start.dateTime || dayStart.getTime() + 9 * HOUR;
+
+                console.log('Setting up alarm for event "' + event.summary + '" on ' + moment(eventTime).format());
+                alarm.addOneTimeAlarm('Event:' + event.summary, new Date(eventTime), {'type': 'event', 'title': event.summary});
+            });
+
+            broadcastNextAlarm();
+        });
+}
 
 function convertMessageSettings(message) {
     // Text message: go google translate
