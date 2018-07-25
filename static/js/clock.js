@@ -222,4 +222,5 @@ window.addEventListener('load', () => {
     updateClocks();
     setInterval(() => updateClocks(), 500);
     showSection('clock');
+    socket.emit('hello');
 }, false);

@@ -60,6 +60,10 @@ io.on('connection', client => {
             .then(() => playMessages(['Timelapse is ready'], client));
     });
 
+    client.on('hello', () => {
+        playMessages(['PI clock connected'], client);
+    });
+
     broadcastNextAlarm();
     broadcastWeather();
 });
