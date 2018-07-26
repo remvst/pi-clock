@@ -143,9 +143,9 @@ io.on('connection', client => {
         playMessages(['Test message', {'videoId': 'dQw4w9WgXcQ'}, 'Hopefully it worked'], client);
     });
 
-    client.on('timelapse', () => {
-        const duration = 10 * 60;
-        const framerate = 10 / 60;
+    client.on('timelapse', settings => {
+        const duration = settings.duration || 10 * 60;
+        const framerate = settings.framerate || 10 / 60;
 
         playMessages(['Starting timelapse for ' + Math.round(duration / 60) + ' minutes at ' + (Math.round(framerate * 100) / 100) + ' FPS'], client);
 

@@ -221,9 +221,14 @@ window.addEventListener('load', () => {
         socket.emit('test-message');
     });
 
-    document.querySelector('#timelapse-button').addEventListener('click', () => {
+    document.querySelector('#timelapse-10m-button').addEventListener('click', () => {
         showSection('clock');
-        socket.emit('timelapse');
+        socket.emit('timelapse', {'duration': 10 * 60, 'framerate': 10 / 60});
+    });
+
+    document.querySelector('#timelapse-24hr-button').addEventListener('click', () => {
+        showSection('clock');
+        socket.emit('timelapse', {'duration': 24 * 3600, 'framerate': 1 / 60});
     });
 
     document.querySelector('#alarm').addEventListener('click', () => {
