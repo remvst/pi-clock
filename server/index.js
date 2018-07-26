@@ -283,14 +283,17 @@ function makeTimelapse(duration, fps) {
             return Promise.all(promises)
         })
         .then(() => {
+            console.log('Assembling frames');
+
             const videoPath = 'video.mp4';
             return new Promise((resolve, reject) => {
-                exec('ffmpeg -r 25 -i ' + folder + '/frame-%04d.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p video.mp4', (err, stdout, stderr) => {
+                exec('ffmpeg -r 25 -i ' + folder + '/frame-%04d.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/video.mp4', err => {
                     if (err) {
                       reject(err);
                       return;
                     }
                     
+                    console.log('Frames assembled');
                     resolve(videoPath);
                 });
             });
