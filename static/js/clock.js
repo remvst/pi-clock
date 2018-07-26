@@ -60,6 +60,15 @@ function showSection(sectionId) {
     section.style.display = 'block';
 }
 
+function sectionIsVisible(sectionId) {
+    const section = document.querySelector('section#' + sectionId);
+    if (!section) {
+        return;
+    }
+
+    return section.style.display === 'block';
+}
+
 function showMessage(messageData) {
     CURRENT_MESSAGE = messageData;
 
@@ -208,15 +217,32 @@ window.addEventListener('load', () => {
     socket.on('weather', weather => receivedWeather(weather));
 
     document.querySelector('#test-message-button').addEventListener('click', () => {
+        showSection('clock');
         socket.emit('test-message');
     });
 
     document.querySelector('#timelapse-button').addEventListener('click', () => {
+        showSection('clock');
         socket.emit('timelapse');
     });
 
     document.querySelector('#alarm').addEventListener('click', () => {
+        showSection('clock');
         socket.emit('alarm');
+    });
+
+    document.querySelector('#clock').addEventListener('click', () => {
+        showSection('controls');
+
+        setTimeout(() => {
+            if (sectionIsVisible('controls')) {
+                showSection('clock');
+            }
+        }, 5000);
+    });
+
+    document.querySelector('#close-controls').addEventListener('click', () => {
+        showSection('clock');
     });
 
     document.querySelector('#close-video-button').addEventListener('click', () => {
