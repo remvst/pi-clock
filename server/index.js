@@ -219,7 +219,7 @@ function convertMessageSettings(message) {
 }
 
 function playMessages(messages, client) {
-    Promise.all(messages.filter(m => m).map(message => convertMessageSettings(message)))
+    Promise.all(messages.filter(m => m).map(message => convertMessageSettings(message)).catch(() => [])) // TODO remove catch
         .then(messagesSettings => {
             messagesSettings.forEach(settings => {
                 client.emit('play-message', settings);
