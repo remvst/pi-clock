@@ -226,6 +226,11 @@ window.addEventListener('load', () => {
         socket.emit('timelapse', {'duration': 10 * 60, 'framerate': 10 / 60});
     });
 
+    document.querySelector('#timelapse-1hr-button').addEventListener('click', () => {
+        showSection('clock');
+        socket.emit('timelapse', {'duration': 3600, 'framerate': 3 / 60});
+    });
+
     document.querySelector('#timelapse-24hr-button').addEventListener('click', () => {
         showSection('clock');
         socket.emit('timelapse', {'duration': 24 * 3600, 'framerate': 1 / 60});
@@ -243,7 +248,7 @@ window.addEventListener('load', () => {
             if (sectionIsVisible('controls')) {
                 showSection('clock');
             }
-        }, 5000);
+        }, 8000);
     });
 
     document.querySelector('#close-controls').addEventListener('click', () => {
