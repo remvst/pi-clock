@@ -191,35 +191,66 @@ function setupAlarmsForToday() {
         });
 }
 
+function splitStringIntoChunks(string, splitters) {
+    if (string.length === 0) {
+        return [];
+    }
+
+    if (string.length <= 200 || splitters.length === 0) {
+        return [string];
+    }
+
+    const splitter = splitters[0];
+    const components = string.split(splitter);
+    if (components.length <= 1) {
+        return splitStringIntoChunks(string, splitters.slice(1));
+    }
+
+    const firstComponent = components[0];
+
+    const firstComponentChunks = splitStringIntoChunks(firstComponent, splitters.slice(1));
+    const otherComponentsChunks = splitStringIntoChunks(string.slice(firstComponent.length + 1), splitters);
+
+    return firstComponentChunks.concat(otherComponentsChunks);
+}
+
+
 function convertMessageSettings(message) {
     // Text message: go google translate
     if (typeof message === 'string') {
-        return googleTTS(message, 'en', 1)
-            .then(url => {
-                const file = '/tmp/' + uuid() + '.mp3';
-                return rp({'uri': url, 'encoding': null})
-                    .then(contents => fs.outputFile(__dirname + '/..' + file, contents))
-                    .then(() => {
-                        return {
-                            'url': file,
-                            'message': message
-                        };
-                    });
-            });
+        return Promise.all(splitStringIntoChunks(message).map(chunk => {
+            return googleTTS(chunk, 'en', 1)
+                .then(url => {
+                    const file = '/tmp/' + uuid() + '.mp3';
+                    return rp({'uri': url, 'encoding': null})
+                        .then(contents => fs.outputFile(__dirname + '/..' + file, contents))
+                        .then(() => {
+                            return {
+                                'url': file,
+                                'message': chunk
+                            };
+                        });
+                });
+        }));
     }
     
     // Video message: send the video ID
     if (message.videoId) {
-        return Promise.resolve({
+        return Promise.resolve([{
             'videoId': message.videoId
-        });
+        }]);
     }
 
     return Promise.reject(new Error('Invalid message'));
 }
 
 function playMessages(messages, client) {
-    Promise.all(messages.filter(m => m).map(message => convertMessageSettings(message).catch(() => []))) // TODO remove catch
+    Promise.all(messages.filter(m => m).map(message => convertMessageSettings(message)))
+        .then(messagesChunks => {
+            let flattened = [];
+            messagesChunks.forEach(chunks => flattened = flattened.concat(chunks));
+            return flattened;
+        })
         .then(messagesSettings => {
             messagesSettings.forEach(settings => {
                 client.emit('play-message', settings);
