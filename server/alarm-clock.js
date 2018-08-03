@@ -87,17 +87,14 @@ class AlarmClock {
         const previousNextAlarmTimes = this.nextAlarmTimes;
         this.sortAlarms();
 
-        if (previousNextAlarmTimes[0].time === this.nextAlarmTimes[0].time) {
+        if (previousNextAlarmTimes[0].time.getTime() === this.nextAlarmTimes[0].time.getTime()) {
             return;
         }
 
-        // Ring for all the alarms that are now passed
-        let i = 0;
         const now = Date.now();
-        while (i < previousNextAlarmTimes.length && now >= previousNextAlarmTimes[i].time) {
-            this.ring(previousNextAlarmTimes[i].setting);
-            i++;
-        }
+        previousNextAlarmTimes
+            .filter(alarmTime => now >= alarmTime.time.getTime())
+            .forEach(alarmTime => this.ring(alarmTime.setting));
     }
 
     ring(setting) {
