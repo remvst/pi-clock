@@ -28,7 +28,7 @@ class GoogleCalendar {
         
         // Check if we have previously stored a token
         return fs.readFile(this.tokenPath)
-            .catch(err => {
+            .catch(() => {
                 console.log('Error reading ' + this.tokenPath + ', generating new token');
                 return this.getNewAccessToken();
             })
@@ -66,16 +66,16 @@ class GoogleCalendar {
         });
     }
 
-    events(minDate, maxDate) {
+    events(minDate, maxDate, calendarId = 'primary') {
         return this.authorize()
-            .then(() => this.doFetchEvents(minDate, maxDate));
+            .then(() => this.doFetchEvents(minDate, maxDate, calendarId));
     }
 
-    doFetchEvents(minDate, maxDate) {
+    doFetchEvents(minDate, maxDate, calendarId) {
         return new Promise((resolve, reject) => {
-            const calendar = google.calendar({version: 'v3', 'auth': this.client});
+            const calendar = google.calendar({'version': 'v3', 'auth': this.client});
             calendar.events.list({
-                'calendarId': 'primary',
+                'calendarId': encodeURIComponent(calendarId),
                 'timeMin': minDate ? minDate.toISOString() : null,
                 'timeMax': maxDate ? maxDate.toISOString() : null,
                 'maxResults': 10,
@@ -90,6 +90,40 @@ class GoogleCalendar {
                 resolve(res.data.items);
             });
         });
+    }
+
+    calendars() {
+        return this.authorize()
+            .then(() => this.doFetchCalendars());
+    }
+
+    doFetchCalendars() {
+        return new Promise((resolve, reject) => {
+            const calendar = google.calendar({'version': 'v3', 'auth': this.client});
+            calendar.calendarList.list({}, (err, res) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(res.data.items);
+            });
+        });
+    }
+
+    allEventsOfAllCalendars(minDate, maxDate) {
+        return this.calendars()
+            .then(calendars => {
+                return Promise.all(calendars.map(calendar => {
+                    return this.events(minDate, maxDate, calendar.id);
+                }));
+            })
+            .then(eventsByCalendar => {
+                // Flatten everything
+                return eventsByCalendar.reduce((acc, events) => {
+                    return acc.concat(events);
+                }, []);
+            });
     }
 
 }

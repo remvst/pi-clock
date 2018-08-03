@@ -77,27 +77,21 @@ const news = new News({
 });
 
 // Scripts
+const randomVideoScript = new RandomVideoScript(config.VIDEO_IDS);
+
 const scripts = [
-    new StaticScript(['Good morning Remi']),
+    new StaticScript(['Good morning Remi', 'Time to wake up']),
     new TimeScript(),
     new GoogleCalendarScript(gc),
     new WeatherScript(weather),
     new NewsScript(news),
     new QuoteOfTheDayScript(quote),
-    new RandomVideoScript(config.VIDEO_IDS),
+    randomVideoScript,
     new StaticScript(['Have an amazing day'])
 ];
 
 // Alarm
 const alarm = new AlarmClock();
-
-alarm.addRecurrentAlarm('Sunday schedule', 0, 0, {'type': 'day-start'});
-alarm.addRecurrentAlarm('Monday schedule', 1, 0, {'type': 'day-start'});
-alarm.addRecurrentAlarm('Tuesday schedule', 2, 0, {'type': 'day-start'});
-alarm.addRecurrentAlarm('Wednesday schedule', 3, 0, {'type': 'day-start'});
-alarm.addRecurrentAlarm('Thursday schedule', 4, 0, {'type': 'day-start'});
-alarm.addRecurrentAlarm('Friday schedule', 5, 0, {'type': 'day-start'});
-alarm.addRecurrentAlarm('Saturday schedule', 6, 0, {'type': 'day-start'});
 
 alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000, {'type': 'alarm'});
 alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000, {'type': 'alarm'});
@@ -132,9 +126,11 @@ alarm.ringCallback = event => {
     } else if (event.type === 'event') {
         clients.forEach(client => {
             playMessages(['Event starting now', event.title], client);
+
+            if (event.title.toLowerCase().indexOf('video') >= 0) {
+                randomVideoScript.generateMessages().then(messages => playMessages(messages, client));
+            }
         });
-    } else if (event.type === 'day-start') {
-        setupAlarmsForToday();
     }
 };
 
@@ -167,6 +163,7 @@ io.on('connection', client => {
 });
 
 setupAlarmsForToday();
+setInterval(setupAlarmsForToday, 60 * 1000);
 
 function setupAlarmsForToday() {
     const dayStart = new Date();
@@ -177,14 +174,19 @@ function setupAlarmsForToday() {
 
     const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
 
-    return gc.events(dayStart, dayEnd)
+    return gc.allEventsOfAllCalendars(new Date(), dayEnd)
         .then(items => {
             items.forEach(event => {
                 // Use either the event time or 9AM
                 const eventTime = event.start.dateTime || dayStart.getTime() + 9 * HOUR;
+                const eventDate = new Date(eventTime);
 
-                console.log('Setting up alarm for event "' + event.summary + '" on ' + moment(eventTime).format());
-                alarm.addOneTimeAlarm('Event:' + event.summary, new Date(eventTime), {'type': 'event', 'title': event.summary});
+                if (alarm.hasEvent(event.id)) {
+                    return;
+                }
+
+                console.log('Setting up alarm for event "' + event.summary + '" on ' + moment(eventDate).format());
+                alarm.addOneTimeAlarm(event.id, 'Event: ' + event.summary, eventDate, {'type': 'event', 'title': event.summary});
             });
 
             broadcastNextAlarm();

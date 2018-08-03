@@ -11,6 +11,10 @@ class AlarmClock {
         this.nextAlarmTimes = null;
     }
 
+    hasEvent(id) {
+        return this.alarmSettings.filter(settings => settings.id === id).length > 0;
+    }
+
     addRecurrentAlarm(label, dayOfWeek, millisecondsInDay, payload) {
         this.alarmSettings.push({
             'type': 'recurrent',
@@ -22,9 +26,14 @@ class AlarmClock {
         this.sortAlarms();
     }
 
-    addOneTimeAlarm(label, date, payload) {
+    addOneTimeAlarm(id, label, date, payload) {
+        if (this.hasEvent(id)) {
+            return;
+        }
+
         this.alarmSettings.push({
             'type': 'oneTime',
+            'id': id,
             'label': label,
             'date': date,
             'payload': payload
