@@ -106,7 +106,7 @@ alarm.addRecurrentAlarm('Wednesday morning', 3, 8.5 * 3600 * 1000, {'type': 'ala
 alarm.addRecurrentAlarm('Thursday morning', 4, 8.5 * 3600 * 1000, {'type': 'alarm'});
 alarm.addRecurrentAlarm('Friday morning', 5, 8.5 * 3600 * 1000, {'type': 'alarm'});
 alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000, {'type': 'alarm'});
-// alarm.addRecurrentAlarm(2, alarm.millisecondsInDay(new Date()) + 5000);
+// alarm.addRecurrentAlarm('now', new Date().getDay(), alarm.millisecondsInDay(new Date()) + 5000, {'type': 'alarm'});
 // alarm.addOneTimeAlarm('testing', new Date(Date.now() + 5000), {'foo': 'bar'});
 
 alarm.ringCallback = event => {
