@@ -1,8 +1,7 @@
 const MESSAGE_QUEUE = [];
 let CURRENT_MESSAGE = null;
 let NEXT_ALARM_TIME = null;
-let YOUTUBE_PLAYER = null;
-let STOP_VIDEO_CALLBACK = null;
+let NEXT_MESSAGE_CALLBACK = null;
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June','July', 'August', 'September', 'October', 'November', 'December'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -76,14 +75,53 @@ function showMessage(messageData) {
         return showTextMessage(messageData);
     } else if (messageData.videoId) {
         return playVideo(messageData.videoId);
+    } else if (messageData.radioUrl) {
+        return showRadioMessage(messageData);
     }
 }
 
 function showTextMessage(messageData) {
     return new Promise((resolve, reject) => {
+        const audio = new Audio();
+
+        function stop() {
+            audio.pause();
+            resolve();
+        }
+
+        NEXT_MESSAGE_CALLBACK = stop;
+
         document.querySelector('#message-text').innerHTML = messageData.message;
 
+        audio.addEventListener('canplay', () => {
+            audio.play();
+        }, false);
+        audio.addEventListener('ended', err => {
+            stop();
+        });
+        audio.addEventListener('error', err => {
+            reject(err);
+        });
+        audio.crossOrigin = 'anonymous';
+        audio.src = messageData.url;
+
+        showSection('message');
+    });
+}
+
+function showRadioMessage(messageData) {
+    return new Promise((resolve, reject) => {
         const audio = new Audio();
+
+        function stop() {
+            audio.pause();
+            resolve();
+        }
+
+        NEXT_MESSAGE_CALLBACK = stop;
+
+        document.querySelector('#message-text').innerHTML = 'Playing radio...';
+
         audio.addEventListener('canplay', () => {
             audio.play();
         }, false);
@@ -93,8 +131,11 @@ function showTextMessage(messageData) {
         audio.addEventListener('error', err => {
             reject(err);
         });
+
+        setTimeout(stop, 3600 * 1000);
+
         audio.crossOrigin = 'anonymous';
-        audio.src = messageData.url;
+        audio.src = messageData.radioUrl;
 
         showSection('message');
     });
@@ -119,9 +160,19 @@ function playNextMessage() {
     showMessage(messageData)
         .catch(err => console.error(err))
         .then(() => {
-            CURRENT_MESSAGE = null;
+            skipMessage();
             return playNextMessage();
         });
+}
+
+function skipMessage() {
+    const callback = NEXT_MESSAGE_CALLBACK;
+    NEXT_MESSAGE_CALLBACK = null;
+    CURRENT_MESSAGE = null;
+
+    if (callback) {
+        callback();
+    }
 }
 
 function receivedNextAlarm(alarmSettings) {
@@ -129,17 +180,13 @@ function receivedNextAlarm(alarmSettings) {
 }
 
 function playVideo(videoId) {
-    stopVideo();
-
     return new Promise((resolve, reject) => {
-        STOP_VIDEO_CALLBACK = () => resolve();
-
-        YOUTUBE_PLAYER = new YT.Player('video-container', {
+        const player = new YT.Player('video-container', {
             'width': '480',
             'height': '320',
             'videoId': videoId,
             'events': {
-                'onReady': () => YOUTUBE_PLAYER.playVideo(),
+                'onReady': () => player.playVideo(),
                 'onStateChange': event => {
                     const playerStatus = event.data;
                     if (playerStatus === 0) { // video ended
@@ -150,25 +197,16 @@ function playVideo(videoId) {
                 'onError': err => reject(err)
             }
         });
+
+        NEXT_MESSAGE_CALLBACK = () => {
+            player.destroy();
+            NEXT_MESSAGE_CALLBACK = null;
+
+            resolve();
+        }
     
         showSection('video');
     });
-}
-
-function stopVideo() {
-    if (!YOUTUBE_PLAYER) {
-        return;
-    }
-
-    const callback = STOP_VIDEO_CALLBACK;
-
-    YOUTUBE_PLAYER.destroy();
-    YOUTUBE_PLAYER = null;
-    STOP_VIDEO_CALLBACK = null;
-
-    if (callback) {
-        callback();
-    }
 }
 
 function toCelsius(kelvin) {
@@ -241,6 +279,11 @@ window.addEventListener('load', () => {
         socket.emit('alarm');
     });
 
+    document.querySelector('#sleep-radio').addEventListener('click', () => {
+        showSection('clock');
+        socket.emit('sleep-radio');
+    });
+
     document.querySelector('#clock').addEventListener('click', () => {
         showSection('controls');
 
@@ -256,7 +299,11 @@ window.addEventListener('load', () => {
     });
 
     document.querySelector('#close-video-button').addEventListener('click', () => {
-        stopVideo();
+        skipMessage();
+    });
+
+    document.querySelector('#message').addEventListener('click', () => {
+        skipMessage();
     });
 
     updateClocks();

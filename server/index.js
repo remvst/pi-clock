@@ -139,6 +139,10 @@ io.on('connection', client => {
         playMessages(['Test message', {'videoId': 'dQw4w9WgXcQ'}, 'Hopefully it worked'], client);
     });
 
+    client.on('sleep-radio', () => {
+        playMessages([{'radioUrl': config.SLEEP_RADIO_URL}], client);
+    });
+
     client.on('timelapse', settings => {
         const duration = settings.duration || 10 * 60;
         const framerate = settings.framerate || 10 / 60;
@@ -178,7 +182,7 @@ function setupAlarmsForToday() {
         .then(items => {
             items.forEach(event => {
                 // Use either the event time or 9AM
-                const eventTime = event.start.dateTime || dayStart.getTime() + 9 * HOUR;
+                const eventTime = event.start.dateTime || dayStart.getTime() + 9 * 3600 * 1000;
                 const eventDate = new Date(eventTime);
 
                 if (alarm.hasEvent(event.id)) {
@@ -240,6 +244,12 @@ function convertMessageSettings(message) {
     if (message.videoId) {
         return Promise.resolve([{
             'videoId': message.videoId
+        }]);
+    }
+
+    if (message.radioUrl) {
+        return Promise.resolve([{
+            'radioUrl': message.radioUrl
         }]);
     }
 
