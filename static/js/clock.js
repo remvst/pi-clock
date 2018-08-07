@@ -73,36 +73,6 @@ function receivedNextAlarm(alarmSettings) {
     NEXT_ALARM_TIME = alarmSettings.time;
 }
 
-function playVideo(videoId) {
-    return new Promise((resolve, reject) => {
-        const player = new YT.Player('video-container', {
-            'width': '480',
-            'height': '320',
-            'videoId': videoId,
-            'events': {
-                'onReady': () => player.playVideo(),
-                'onStateChange': event => {
-                    const playerStatus = event.data;
-                    if (playerStatus === 0) { // video ended
-                        stopVideo();
-                        resolve();
-                    }
-                },
-                'onError': err => reject(err)
-            }
-        });
-
-        NEXT_MESSAGE_CALLBACK = () => {
-            player.destroy();
-            NEXT_MESSAGE_CALLBACK = null;
-
-            resolve();
-        }
-    
-        showSection('video');
-    });
-}
-
 function toCelsius(kelvin) {
     return kelvin - 273.15;
 }
