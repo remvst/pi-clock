@@ -80,6 +80,7 @@ const news = new News({
 const randomVideoScript = new RandomVideoScript(config.VIDEO_IDS);
 
 const scripts = [
+    new RandomVideoScript(config.ALARM_VIDEO_IDS),
     new StaticScript(['Good morning Remi', 'Time to wake up']),
     new TimeScript(),
     new GoogleCalendarScript(gc),
@@ -93,13 +94,13 @@ const scripts = [
 // Alarm
 const alarm = new AlarmClock();
 
-alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Tuesday morning', 2, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Wednesday morning', 3, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Thursday morning', 4, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Friday morning', 5, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Tuesday morning', 2, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Wednesday morning', 3, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Thursday morning', 4, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Friday morning', 5, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
 // alarm.addRecurrentAlarm('now', new Date().getDay(), alarm.millisecondsInDay(new Date()) + 5000, {'type': 'alarm'});
 // alarm.addOneTimeAlarm('testing', new Date(Date.now() + 5000), {'foo': 'bar'});
 

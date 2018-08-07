@@ -13,10 +13,7 @@ class RandomVideoScript extends Script {
 
     generateMessages() {
         const chance = new Chance();
-        return Promise.resolve([
-            'Here is a random video',
-            {'videoId': chance.pickone(this.videoIds)}
-        ]);
+        return Promise.resolve([{'videoId': chance.pickone(this.videoIds)}]);
     }
 
 }
