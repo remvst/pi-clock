@@ -1,3 +1,5 @@
+'use strict';
+
 const MESSAGE_QUEUE = [];
 let CURRENT_MESSAGE = null;
 let NEXT_ALARM_TIME = null;
@@ -22,7 +24,6 @@ function addZeroes(x, n = 2) {
 
 function updateClocks() {
     const now = new Date();
-    const s = addZeroes(now.getHours()) + ':' + addZeroes(now.getMinutes());
 
     document.querySelectorAll('.minutes').forEach(minutes => minutes.innerHTML = addZeroes(now.getMinutes()));
     document.querySelectorAll('.hours').forEach(hours => hours.innerHTML = addZeroes(now.getHours()));
@@ -66,113 +67,6 @@ function sectionIsVisible(sectionId) {
     }
 
     return section.style.display === 'block';
-}
-
-function showMessage(messageData) {
-    CURRENT_MESSAGE = messageData;
-
-    if (messageData.message) {
-        return showTextMessage(messageData);
-    } else if (messageData.videoId) {
-        return playVideo(messageData.videoId);
-    } else if (messageData.radioUrl) {
-        return showRadioMessage(messageData);
-    }
-}
-
-function showTextMessage(messageData) {
-    return new Promise((resolve, reject) => {
-        const audio = new Audio();
-
-        function stop() {
-            audio.pause();
-            resolve();
-        }
-
-        NEXT_MESSAGE_CALLBACK = stop;
-
-        document.querySelector('#message-text').innerHTML = messageData.message;
-
-        audio.addEventListener('canplay', () => {
-            audio.play();
-        }, false);
-        audio.addEventListener('ended', err => {
-            stop();
-        });
-        audio.addEventListener('error', err => {
-            reject(err);
-        });
-        audio.crossOrigin = 'anonymous';
-        audio.src = messageData.url;
-
-        showSection('message');
-    });
-}
-
-function showRadioMessage(messageData) {
-    return new Promise((resolve, reject) => {
-        const audio = new Audio();
-
-        function stop() {
-            audio.pause();
-            resolve();
-        }
-
-        NEXT_MESSAGE_CALLBACK = stop;
-
-        document.querySelector('#message-text').innerHTML = 'Playing radio...';
-
-        audio.addEventListener('canplay', () => {
-            audio.play();
-        }, false);
-        audio.addEventListener('ended', err => {
-            resolve();
-        });
-        audio.addEventListener('error', err => {
-            reject(err);
-        });
-
-        setTimeout(stop, 3600 * 1000);
-
-        audio.crossOrigin = 'anonymous';
-        audio.src = messageData.radioUrl;
-
-        showSection('message');
-    });
-}
-
-function receivedMessage(messageData) {
-    MESSAGE_QUEUE.push(messageData);
-    playNextMessage();
-}
-
-function playNextMessage() {
-    if (CURRENT_MESSAGE) {
-        return;
-    }
-
-    const messageData = MESSAGE_QUEUE.shift();
-    if (!messageData) {
-        showSection('clock');
-        return;
-    }
-
-    showMessage(messageData)
-        .catch(err => console.error(err))
-        .then(() => {
-            skipMessage();
-            return playNextMessage();
-        });
-}
-
-function skipMessage() {
-    const callback = NEXT_MESSAGE_CALLBACK;
-    NEXT_MESSAGE_CALLBACK = null;
-    CURRENT_MESSAGE = null;
-
-    if (callback) {
-        callback();
-    }
 }
 
 function receivedNextAlarm(alarmSettings) {
@@ -248,12 +142,16 @@ window.addEventListener('load', () => {
 
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    
+    const messageController = new MessageController();
 
+    // Socket input
     const socket = io();
-    socket.on('play-message', messageData => receivedMessage(messageData));
+    socket.on('play-message', messageData => messageController.addToQueue(messageData));
     socket.on('next-alarm', messageData => receivedNextAlarm(messageData));
     socket.on('weather', weather => receivedWeather(weather));
 
+    // Controls
     document.querySelector('#test-message-button').addEventListener('click', () => {
         showSection('clock');
         socket.emit('test-message');
@@ -299,11 +197,11 @@ window.addEventListener('load', () => {
     });
 
     document.querySelector('#close-video-button').addEventListener('click', () => {
-        skipMessage();
+        messageController.skipMessage();
     });
 
     document.querySelector('#message').addEventListener('click', () => {
-        skipMessage();
+        messageController.skipMessage();
     });
 
     updateClocks();
