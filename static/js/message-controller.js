@@ -40,7 +40,10 @@ class MessageController {
     }
 
     processNextMessage() {
-        this.currentMessage = null;
+        if (this.currentMessage) {
+            this.currentMessage.stop();
+            this.currentMessage = null;
+        }
 
         showSection('clock');
 

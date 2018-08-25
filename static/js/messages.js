@@ -140,8 +140,6 @@ class RadioMessage extends Message {
     show() {
         return this.readyDeferred.promise
             .then(() => {
-                console.log('readyyy');
-
                 setTimeout(() => {
                     this.doneDeferred.resolve();
                 }, 60 * 60 * 1000);
