@@ -96,7 +96,7 @@ function receivedWeather(weather) {
         const temperatures = document.createElement('temperatures');
         temperatures.innerHTML = 'H: ' + Math.round(toCelsius(maxTemperature)) + '°, L: ' + Math.round(toCelsius(minTemperature)) + '°';
         node.appendChild(temperatures);
-    
+
         weatherTypeIds.forEach(weatherTypeId => {
             const icon = new Image();
             icon.src = 'http://openweathermap.org/img/w/' + weatherTypeId + '.png';
@@ -112,14 +112,16 @@ window.addEventListener('load', () => {
 
     const firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    
+
     const messageController = new MessageController();
 
     // Socket input
     const socket = io();
+    socket.on('connect', () => document.querySelector('#disconnected-banner').style.display = 'none');
+    socket.on('disconnect', () => document.querySelector('#disconnected-banner').style.display = 'block');
     socket.on('play-message', messageData => messageController.addToQueue(messageData));
     socket.on('next-alarm', messageData => receivedNextAlarm(messageData));
-    socket.on('weather', weather => receivedWeather(weather));
+    socket.on('weather  ', weather => receivedWeather(weather));
 
     // Controls
     document.querySelector('#test-message-button').addEventListener('click', () => {

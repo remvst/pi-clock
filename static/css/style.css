@@ -105,3 +105,16 @@ section {
 #controls-container div {
     /* display: grid-item; */
 }
+
+#disconnected-banner {
+    background-color: red;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    padding: 10px;
+    color: white;
+    font-size: 25px;
+    text-align: center;
+    z-index: 99;
+}
