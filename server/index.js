@@ -312,9 +312,9 @@ function makeTimelapse(duration, fps) {
         quality: 100,
         delay: 0,
         saveShots: false,
-        skip: 1,
+        skip: 4,
         output: 'jpeg',
-        callbackReturn: "location",
+        callbackReturn: 'location',
         verbose: true
     });
 
