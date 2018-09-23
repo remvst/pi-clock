@@ -10,6 +10,7 @@ const uuid = require('uuid4');
 const NodeWebcam = require('node-webcam');
 const moment = require('moment');
 const { exec } = require('child_process');
+const espeak = require('espeak');
 
 const Clients = require('./clients');
 const GoogleCalendar = require('./google-calendar');
@@ -226,21 +227,36 @@ function convertMessageSettings(message) {
     // Text message: go google translate
     if (typeof message === 'string') {
         return Promise.all(splitStringIntoChunks(message).map(chunk => {
+            const file = '/tmp/' + uuid() + '.mp3';
             return googleTTS(chunk, 'en', 1)
-                .then(url => {
-                    const file = '/tmp/' + uuid() + '.mp3';
-                    return rp({'uri': url, 'encoding': null})
-                        .then(contents => fs.outputFile(__dirname + '/..' + file, contents))
-                        .then(() => {
-                            return {
-                                'url': file,
-                                'message': chunk
-                            };
+                .then(url => rp({'uri': url, 'encoding': null}))
+
+                // If Google TTS fails, fall back to espeak
+                .catch(err => {
+                    console.error('Google TTS failed', err);
+
+                    return new Promise((resolve, reject) => {
+                        espeak.speak(chunk, (err, wav) => {
+                            if (err) {
+                                return reject(err);
+                            } else {
+                                return resolve(wav.buffer)
+                            }
                         });
+                    });
+                })
+
+                // Save the audio file and return it along with the string
+                .then(contents => fs.outputFile(__dirname + '/..' + file, contents))
+                .then(() => {
+                    return {
+                        'url': file,
+                        'message': chunk
+                    };
                 });
         }));
     }
-    
+
     // Video message: send the video ID
     if (message.videoId) {
         return Promise.resolve([{
@@ -336,7 +352,7 @@ function makeTimelapse(duration, fps) {
                       reject(err);
                       return;
                     }
-                    
+
                     console.log('Frames assembled');
                     resolve(videoPath);
                 });
