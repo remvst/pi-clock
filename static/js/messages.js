@@ -175,7 +175,7 @@ class PictureMessage extends Message {
     show() {
         setTimeout(() => {
             this.doneDeferred.resolve();
-        }, 500000);
+        }, 10000);
 
         document.querySelector('#picture').style.backgroundImage = 'url("' + this.pictureUrl + '")';
         showSection('picture');

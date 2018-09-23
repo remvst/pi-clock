@@ -176,6 +176,10 @@ window.addEventListener('load', () => {
         messageController.skipMessage();
     });
 
+    document.querySelector('#picture').addEventListener('click', () => {
+        messageController.skipMessage();
+    });
+
     updateClocks();
     setInterval(() => updateClocks(), 500);
     showSection('clock');
