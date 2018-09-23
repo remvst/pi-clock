@@ -89,6 +89,8 @@ const scripts = [
     new NewsScript(news),
     new QuoteOfTheDayScript(quote),
     randomVideoScript,
+    randomVideoScript,
+    randomVideoScript,
     new StaticScript(['Have an amazing day'])
 ];
 
@@ -106,7 +108,7 @@ alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000 - 20 * 60 * 1000
 // alarm.addOneTimeAlarm('testing', new Date(Date.now() + 5000), {'foo': 'bar'});
 
 alarm.ringCallback = event => {
-    if (event.type === 'alarm') {
+    if (event.type === 'alarm' || event.title.indexOf('wake') >= 0) {
         Promise.all(scripts.map(script => {
             return script.generateMessages()
                 .catch(err => {
