@@ -306,18 +306,6 @@ function broadcastWeather() {
 }
 
 function makeTimelapse(duration, fps) {
-    const camera = NodeWebcam.create({
-        width: 1280,
-        height: 720,
-        quality: 100,
-        delay: 0,
-        saveShots: false,
-        skip: 4,
-        output: 'jpeg',
-        callbackReturn: 'location',
-        verbose: true
-    });
-
     const frames = duration * fps;
     const maxFrameIdLength = Math.max(frames.toString().length, 4);
     const folder = 'frames/' + moment(new Date()).utc().format();
@@ -330,6 +318,18 @@ function makeTimelapse(duration, fps) {
                 promises.push((function(i) {
                     return new Promise((resolve, reject) => {
                         setTimeout(() => {
+                            const camera = NodeWebcam.create({
+                                width: 1280,
+                                height: 720,
+                                quality: 100,
+                                delay: 0,
+                                saveShots: false,
+                                skip: 4,
+                                output: 'jpeg',
+                                callbackReturn: 'location',
+                                verbose: true
+                            });
+
                             camera.capture(folder + '/frame-' + addZeroes(i, maxFrameIdLength), (err, data) => {
                                 if (err) {
                                     reject(err);
