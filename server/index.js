@@ -331,7 +331,7 @@ function makeTimelapse(duration, fps, client) {
                                 quality: 100,
                                 delay: 0,
                                 saveShots: false,
-                                skip: 4,
+                                skip: 40,
                                 output: 'jpeg',
                                 callbackReturn: 'location',
                                 verbose: true
