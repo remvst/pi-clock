@@ -117,7 +117,7 @@ alarm.ringCallback = event => {
             let messages = [];
             results.forEach(result => {
                 messages = messages.concat(result);
-            })
+            });
             console.log(messages);
             clients.forEach(client => {
                 playMessages(messages, client);
@@ -240,7 +240,7 @@ function convertMessageSettings(message) {
                             if (err) {
                                 return reject(err);
                             } else {
-                                return resolve(wav.buffer)
+                                return resolve(wav.buffer);
                             }
                         });
                     });
@@ -340,7 +340,7 @@ function makeTimelapse(duration, fps) {
                 })(i));
             }
 
-            return Promise.all(promises)
+            return Promise.all(promises);
         })
         .then(() => {
             console.log('Assembling frames');
