@@ -146,7 +146,7 @@ class RadioMessage extends Message {
 
                 document.querySelector('#message-text').innerHTML = 'Playing radio...';
                 showSection('message');
-                
+
                 this.audio.play();
 
                 return this.doneDeferred.promise;
@@ -155,6 +155,34 @@ class RadioMessage extends Message {
 
     stop() {
         this.audio.pause();
+        this.doneDeferred.resolve();
+    }
+
+    get interruptible() {
+        return true;
+    }
+}
+
+class PictureMessage extends Message {
+    constructor(pictureUrl) {
+        super();
+
+        this.pictureUrl = pictureUrl;
+
+        this.doneDeferred = Promise.defer();
+    }
+
+    show() {
+        setTimeout(() => {
+            this.doneDeferred.resolve();
+        }, 500000);
+
+        document.querySelector('#picture').style.backgroundImage = 'url("' + this.pictureUrl + '")';
+        showSection('picture');
+        return this.doneDeferred.promise;
+    }
+
+    stop() {
         this.doneDeferred.resolve();
     }
 

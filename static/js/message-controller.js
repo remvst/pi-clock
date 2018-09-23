@@ -10,7 +10,7 @@ class MessageController {
     addToQueue(messageData) {
         const parsed = this.parse(messageData);
         this.queue.push(parsed);
-        
+
         console.log(parsed);
 
         if (!this.currentMessage || this.currentMessage.interruptible) {
@@ -25,6 +25,8 @@ class MessageController {
             return new VideoMessage(messageData.videoId);
         } else if (messageData.radioUrl) {
             return new RadioMessage(messageData.radioUrl);
+        } else if (messageData.pictureUrl) {
+            return new PictureMessage(messageData.pictureUrl);
         }
 
         throw new Error('Invalid message');

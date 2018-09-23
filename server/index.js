@@ -44,6 +44,7 @@ const io = socketIO.listen(server);
 const clients = new Clients(io);
 
 app.use('/tmp', express.static('tmp'));
+app.use('/frames', express.static('frames'));
 app.use('/', express.static('static'));
 
 server.listen(PORT, () => {
@@ -153,7 +154,7 @@ io.on('connection', client => {
 
         playMessages(['Starting timelapse for ' + Math.round(duration / 60) + ' minutes at ' + (Math.round(framerate * 100) / 100) + ' FPS'], client);
 
-        makeTimelapse(duration, framerate)
+        makeTimelapse(duration, framerate, client)
             .then(() => playMessages(['Timelapse is ready'], client));
     });
 
@@ -272,6 +273,12 @@ function convertMessageSettings(message) {
         }]);
     }
 
+    if (message.pictureUrl) {
+        return Promise.resolve([{
+            'pictureUrl': message.pictureUrl
+        }]);
+    }
+
     return Promise.reject(new Error('Invalid message'));
 }
 
@@ -305,7 +312,7 @@ function broadcastWeather() {
         });
 }
 
-function makeTimelapse(duration, fps) {
+function makeTimelapse(duration, fps, client) {
     const frames = duration * fps;
     const maxFrameIdLength = Math.max(frames.toString().length, 4);
     const folder = 'frames/' + moment(new Date()).utc().format();
@@ -330,10 +337,13 @@ function makeTimelapse(duration, fps) {
                                 verbose: true
                             });
 
+                            const file = folder + '/frame-' + addZeroes(i, maxFrameIdLength);
+
                             camera.capture(folder + '/frame-' + addZeroes(i, maxFrameIdLength), (err, data) => {
                                 if (err) {
                                     reject(err);
                                 } else {
+                                    playMessages([{'pictureUrl': file + '.jpg'}], client);
                                     resolve(data);
                                 }
                             });
