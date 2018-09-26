@@ -359,7 +359,7 @@ function makeTimelapse(duration, fps, client) {
 
             const videoPath = 'video.mp4';
             return new Promise((resolve, reject) => {
-                exec('ffmpeg -r 25 -i ' + folder + '/frame-%04d.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/video.mp4', err => {
+                exec('ffmpeg -r 25 -i ' + folder + '/frame-*.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/video.mp4', err => {
                     if (err) {
                       reject(err);
                       return;
