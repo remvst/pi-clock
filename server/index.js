@@ -315,7 +315,8 @@ function broadcastWeather() {
 function makeTimelapse(duration, fps, client) {
     const frames = duration * fps;
     const maxFrameIdLength = Math.max(frames.toString().length, 4);
-    const folder = 'frames/' + moment(new Date()).utc().format();
+    const dateFormat = moment(new Date()).utc().format();
+    const folder = 'frames/' + dateFormat;
 
     return fs.mkdirp(folder)
         .then(() => {
@@ -359,7 +360,7 @@ function makeTimelapse(duration, fps, client) {
 
             const videoPath = 'video.mp4';
             return new Promise((resolve, reject) => {
-                exec('ffmpeg -r 25 -i ' + folder + '/frame-*.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/video.mp4', err => {
+                exec('ffmpeg -r 25 -i ' + folder + '/frame-*.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/' + dateFormat + '.mp4', err => {
                     if (err) {
                       reject(err);
                       return;
