@@ -325,6 +325,32 @@ function broadcastWeather() {
         });
 }
 
+function takePicture(path, delayInMs) {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const camera = NodeWebcam.create({
+                width: 1280,
+                height: 720,
+                quality: 100,
+                delay: 0,
+                saveShots: false,
+                skip: 40,
+                output: 'jpeg',
+                callbackReturn: 'location',
+                verbose: true
+            });
+
+            camera.capture(path, (err, data) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(path);
+                }
+            });
+        }, delayInMs);
+    });
+}
+
 function makeTimelapse(duration, fps, client) {
     const frames = duration * fps;
     const maxFrameIdLength = Math.max(frames.toString().length, 4);
@@ -335,41 +361,20 @@ function makeTimelapse(duration, fps, client) {
         .then(() => {
             const promises = [];
             for (let i = 0 ; i < frames ; i++) {
-                // throw new Error();
-                promises.push((function(i) {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const camera = NodeWebcam.create({
-                                width: 1280,
-                                height: 720,
-                                quality: 100,
-                                delay: 0,
-                                saveShots: false,
-                                skip: 40,
-                                output: 'jpeg',
-                                callbackReturn: 'location',
-                                verbose: true
-                            });
-
-                            const file = folder + '/frame-' + addZeroes(i, maxFrameIdLength);
-
-                            camera.capture(folder + '/frame-' + addZeroes(i, maxFrameIdLength), (err, data) => {
-                                if (err) {
-                                    reject(err);
-                                } else {
-                                    playMessages([{'pictureUrl': file + '.jpg'}], client);
-                                    resolve(data);
-                                }
-                            });
-                        }, i * (1 / fps) * 1000);
-                    });
-                })(i));
+                const file = folder + '/frame-' + addZeroes(i, maxFrameIdLength);
+                const delayInMs = i * (1 / fps) * 1000;
+                promises.push(takePicture(file, delayInMs));
             }
 
-            return Promise.all(promises);
+            return Promise.all(promises.map(promise => {
+                return promise
+                    .then(path => playMessages([{'pictureUrl': path + '.jpg'}], client))
+                    .catch(err => log.error(err));
+            }));
         })
         .then(() => {
             log.info('Assembling frames');
+            playMessages(['Frames are ready, assembling...'], client);
 
             const videoPath = 'video.mp4';
             return new Promise((resolve, reject) => {
