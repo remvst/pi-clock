@@ -19,7 +19,7 @@ class AlarmClock {
         this.alarmSettings.push({
             'type': 'recurrent',
             'label': label,
-            'dayOfWeek': dayOfWeek, 
+            'dayOfWeek': dayOfWeek,
             'millisecondsInDay': millisecondsInDay,
             'payload': payload
         });
@@ -66,7 +66,7 @@ class AlarmClock {
 
         return this.nextRingingTime(this.alarmSettings[0]);
     }
-    
+
     nextRingingTime(setting) {
         if (setting.type === 'recurrent') {
             const now = this.currentDate();
@@ -91,7 +91,7 @@ class AlarmClock {
     millisecondsInDay(date) {
         return (date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()) * 1000;
     }
-    
+
     tick() {
         const previousNextAlarmTimes = this.nextAlarmTimes;
         this.sortAlarms();

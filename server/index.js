@@ -54,6 +54,11 @@ server.listen(PORT, () => {
     setInterval(broadcastWeather, 30000);
 });
 
+setInterval(() => {
+    const used = process.memoryUsage().heapUsed / 1024 / 1024;
+    console.log(`Heap: ${Math.round(used * 100) / 100} MB`);
+}, 30000);
+
 // APIs
 const gc = new GoogleCalendar({
     'credentialsPath': CREDENTIALS_PATH,
