@@ -382,8 +382,9 @@ function makeTimelapse(duration, fps, client) {
                 log.debug(command);
                 exec(command, err => {
                     if (err) {
-                      reject(err);
-                      return;
+                        log.error(err);
+                        reject(err);
+                        return;
                     }
 
                     log.info('Frames assembled');
