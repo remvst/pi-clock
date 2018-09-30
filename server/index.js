@@ -199,6 +199,10 @@ function setupAlarmsForToday() {
                 const eventTime = event.start.dateTime || dayStart.getTime() + 9 * 3600 * 1000;
                 const eventDate = new Date(eventTime);
 
+                if (eventDate.getTime() < new Date().getTime()) {
+                    return;
+                }
+
                 if (alarm.hasEvent(event.id)) {
                     return;
                 }
@@ -369,7 +373,9 @@ function makeTimelapse(duration, fps, client) {
 
             const videoPath = 'video.mp4';
             return new Promise((resolve, reject) => {
-                exec('ffmpeg -r 25 -i ' + folder + '/frame-*.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/' + dateFormat + '.mp4', err => {
+                const command = 'ffmpeg -r 25 -i ' + folder + '/frame-*.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/' + dateFormat + '.mp4';
+                log.debug(command);
+                exec(command, err => {
                     if (err) {
                       reject(err);
                       return;
