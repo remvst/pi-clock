@@ -11,6 +11,7 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 class GoogleCalendar {
 
     constructor(options) {
+        this.log = options.log;
         this.credentialsPath = options.credentialsPath;
         this.tokenPath = options.tokenPath;
 
@@ -25,11 +26,11 @@ class GoogleCalendar {
     getToken(credentials) {
         const {client_secret, client_id, redirect_uris} = credentials.installed;
         this.client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-        
+
         // Check if we have previously stored a token
         return fs.readFile(this.tokenPath)
             .catch(() => {
-                console.log('Error reading ' + this.tokenPath + ', generating new token');
+                this.log.warn('Error reading ' + this.tokenPath + ', generating new token');
                 return this.getNewAccessToken();
             })
             .then(token => this.client.setCredentials(JSON.parse(token)));
@@ -40,14 +41,14 @@ class GoogleCalendar {
             access_type: 'offline',
             scope: SCOPES,
         });
-        console.log('Authorize this app by visiting this url:', authUrl);
-    
+        this.log.info('Authorize this app by visiting this url:', authUrl);
+
         // Prompt the token
         const rl = readline.createInterface({
             'input': process.stdin,
             'output': process.stdout,
         });
-    
+
         return prompt('Enter the code from that page here: ')
             .then(code => this.getTokenFromCode(code))
             .then(token => fs.writeFile(this.tokenPath, JSON.stringify(token)).then(() => token));

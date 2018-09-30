@@ -11,6 +11,7 @@ const NodeWebcam = require('node-webcam');
 const moment = require('moment');
 const { exec } = require('child_process');
 const espeak = require('espeak');
+const bunyan = require('bunyan');
 
 const Clients = require('./clients');
 const GoogleCalendar = require('./google-calendar');
@@ -41,14 +42,16 @@ const app = express();
 const server = Server(app);
 const io = socketIO.listen(server);
 
-const clients = new Clients(io);
+const log = bunyan.createLogger({'name': 'pi-clock'});
+
+const clients = new Clients(io, log);
 
 app.use('/tmp', express.static('tmp'));
 app.use('/frames', express.static('frames'));
 app.use('/', express.static('static'));
 
 server.listen(PORT, () => {
-    console.log('Server started');
+    log.info('Server started');
 
     setInterval(() => alarm.tick(), 1000);
     setInterval(broadcastWeather, 30000);
@@ -56,13 +59,14 @@ server.listen(PORT, () => {
 
 setInterval(() => {
     const used = process.memoryUsage().heapUsed / 1024 / 1024;
-    console.log(`Heap: ${Math.round(used * 100) / 100} MB`);
+    log.info(`Heap: ${Math.round(used * 100) / 100} MB`);
 }, 30000);
 
 // APIs
 const gc = new GoogleCalendar({
     'credentialsPath': CREDENTIALS_PATH,
-    'tokenPath': TOKEN_PATH
+    'tokenPath': TOKEN_PATH,
+    'log': log
 });
 
 // gc.events(new Date(), new Date(Date.now() + 24 * 3600 * 1000))
@@ -101,7 +105,7 @@ const scripts = [
 ];
 
 // Alarm
-const alarm = new AlarmClock();
+const alarm = new AlarmClock(log);
 
 alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
 alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
@@ -118,7 +122,7 @@ alarm.ringCallback = event => {
         Promise.all(scripts.map(script => {
             return script.generateMessages()
                 .catch(err => {
-                    console.error(err);
+                    log.error(err);
                     return ['Script error'];
                 });
         })).then(results => {
@@ -126,7 +130,7 @@ alarm.ringCallback = event => {
             results.forEach(result => {
                 messages = messages.concat(result);
             });
-            console.log(messages);
+            log.info(messages);
             clients.forEach(client => {
                 playMessages(messages, client);
             });
@@ -199,7 +203,7 @@ function setupAlarmsForToday() {
                     return;
                 }
 
-                console.log('Setting up alarm for event "' + event.summary + '" on ' + moment(eventDate).format());
+                log.info('Setting up alarm for event "' + event.summary + '" on ' + moment(eventDate).format());
                 alarm.addOneTimeAlarm(event.id, 'Event: ' + event.summary, eventDate, {'type': 'event', 'title': event.summary});
             });
 
@@ -241,7 +245,7 @@ function convertMessageSettings(message) {
 
                 // If Google TTS fails, fall back to espeak
                 .catch(err => {
-                    console.error('Google TTS failed', err);
+                    log.error('Google TTS failed', err);
 
                     return new Promise((resolve, reject) => {
                         espeak.speak(chunk, (err, wav) => {
@@ -299,7 +303,7 @@ function playMessages(messages, client) {
                 client.emit('play-message', settings);
             });
         })
-        .catch(err => console.error(err));
+        .catch(err => log.error(err));
 }
 
 function broadcastNextAlarm() {
@@ -361,7 +365,7 @@ function makeTimelapse(duration, fps, client) {
             return Promise.all(promises);
         })
         .then(() => {
-            console.log('Assembling frames');
+            log.info('Assembling frames');
 
             const videoPath = 'video.mp4';
             return new Promise((resolve, reject) => {
@@ -371,7 +375,7 @@ function makeTimelapse(duration, fps, client) {
                       return;
                     }
 
-                    console.log('Frames assembled');
+                    log.info('Frames assembled');
                     resolve(videoPath);
                 });
             });

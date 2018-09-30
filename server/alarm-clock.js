@@ -2,7 +2,8 @@
 
 class AlarmClock {
 
-    constructor() {
+    constructor(log) {
+        this.log = log;
         this.alarmSettings = [];
         this.ringCallback = null;
 
@@ -107,7 +108,7 @@ class AlarmClock {
     }
 
     ring(setting) {
-        console.log('Ringing: ' + setting.label);
+        this.log.info('Ringing: ' + setting.label);
 
         if (this.ringCallback) {
             this.ringCallback(setting.payload);
