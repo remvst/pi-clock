@@ -312,6 +312,9 @@ function playMessages(messages, client) {
 
 function broadcastNextAlarm() {
     const nextAlarm = alarm.nextAlarmTime();
+    if (!nextAlarm) {
+        return;   
+    }
 
     clients.forEach(client => {
         client.emit('next-alarm', {'time': nextAlarm.getTime()});
