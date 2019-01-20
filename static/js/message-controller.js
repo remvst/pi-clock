@@ -11,7 +11,7 @@ class MessageController {
         const parsed = this.parse(messageData);
         this.queue.push(parsed);
 
-        console.log(parsed);
+        console.log('Added message to queue', parsed);
 
         if (!this.currentMessage || this.currentMessage.interruptible) {
             this.processNextMessage();
@@ -22,7 +22,7 @@ class MessageController {
         if (messageData.message) {
             return new VoiceMessage(messageData.message, messageData.url);
         } else if (messageData.videoId) {
-            return new VideoMessage(messageData.videoId);
+            return new VideoMessage(messageData.videoId, messageData.interruptible);
         } else if (messageData.radioUrl) {
             return new RadioMessage(messageData.radioUrl);
         } else if (messageData.pictureUrl) {

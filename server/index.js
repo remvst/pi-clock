@@ -90,8 +90,11 @@ const news = new News({
 // Scripts
 const randomVideoScript = new RandomVideoScript(config.VIDEO_IDS);
 
-const scripts = [
-    new RandomVideoScript(config.ALARM_VIDEO_IDS),
+const wakeUpScripts = [
+    new RandomVideoScript(config.ALARM_VIDEO_IDS, true)
+];
+
+const alarmScripts = [
     new StaticScript(['Good morning Remi', 'Time to wake up']),
     new TimeScript(),
     new GoogleCalendarScript(gc),
@@ -107,35 +110,32 @@ const scripts = [
 // Alarm
 const alarm = new AlarmClock(log);
 
-alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Tuesday morning', 2, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Wednesday morning', 3, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Thursday morning', 4, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Friday morning', 5, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'alarm'});
-// alarm.addRecurrentAlarm('now', new Date().getDay(), alarm.millisecondsInDay(new Date()) + 5000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Sunday wake up', 0, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
+alarm.addRecurrentAlarm('Monday wake up', 1, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
+alarm.addRecurrentAlarm('Tuesday wake up', 2, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
+alarm.addRecurrentAlarm('Wednesday wake up', 3, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
+alarm.addRecurrentAlarm('Thursday wake up', 4, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
+alarm.addRecurrentAlarm('Friday wake up', 5, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
+alarm.addRecurrentAlarm('Saturday wake up', 6, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
+
+alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Tuesday morning', 2, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Wednesday morning', 3, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Thursday morning', 4, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Friday morning', 5, 8.5 * 3600 * 1000, {'type': 'alarm'});
+alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000, {'type': 'alarm'});
+
+// alarm.addRecurrentAlarm('now', new Date().getDay(), alarm.millisecondsInDay(new Date()) + 5000, {'type': 'wakeup'});
+// alarm.addRecurrentAlarm('now again', new Date().getDay(), alarm.millisecondsInDay(new Date()) + 10000, {'type': 'alarm'});
 // alarm.addOneTimeAlarm('testing', new Date(Date.now() + 5000), {'foo': 'bar'});
 
 alarm.ringCallback = event => {
-    if (event.type === 'alarm' || event.title.indexOf('wake') >= 0) {
-        Promise.all(scripts.map(script => {
-            return script.generateMessages()
-                .catch(err => {
-                    log.error(err);
-                    return ['Script error'];
-                });
-        })).then(results => {
-            let messages = [];
-            results.forEach(result => {
-                messages = messages.concat(result);
-            });
-            log.info(messages);
-            clients.forEach(client => {
-                playMessages(messages, client);
-            });
-        });
-
+    if (event.type === 'wakeup') {
+        generateScriptMessagesAndBroadcast(wakeUpScripts);
+        broadcastNextAlarm();
+    } else if (event.type === 'alarm' || event.title.indexOf('wake') >= 0) {
+        generateScriptMessagesAndBroadcast(alarmScripts);
         broadcastNextAlarm();
     } else if (event.type === 'event') {
         clients.forEach(client => {
@@ -276,7 +276,8 @@ function convertMessageSettings(message) {
     // Video message: send the video ID
     if (message.videoId) {
         return Promise.resolve([{
-            'videoId': message.videoId
+            'videoId': message.videoId,
+            'interruptible': message.interruptible
         }]);
     }
 
@@ -403,4 +404,19 @@ function addZeroes(x, n = 2) {
         x = '0' + x;
     }
     return x;
+}
+
+function generateScriptMessagesAndBroadcast(scripts) {
+    Promise.all(scripts.map(script => {
+        return script.generateMessages()
+            .catch(err => {
+                log.error(err);
+                return ['Script error'];
+            });
+    })).then(results => {
+        const messages = results.reduce((acc, messages) => acc.concat(messages), []);
+        log.info(messages);
+
+        clients.forEach(client => playMessages(messages, client));
+    });
 }

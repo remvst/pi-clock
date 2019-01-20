@@ -75,9 +75,10 @@ class VoiceMessage extends Message {
 }
 
 class VideoMessage extends Message {
-    constructor(videoId) {
+    constructor(videoId, isInterruptible) {
         super();
         this.videoId = videoId;
+        this.isInterruptible = isInterruptible;
 
         this.doneDeferred = Promise.defer();
 
@@ -109,6 +110,10 @@ class VideoMessage extends Message {
     stop() {
         this.player.destroy();
         this.doneDeferred.resolve();
+    }
+
+    get interruptible() {
+        return this.isInterruptible;
     }
 }
 
