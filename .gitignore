@@ -6,3 +6,4 @@ token.json
 config.json
 frames
 npm-debug.log
+.DS_Store
