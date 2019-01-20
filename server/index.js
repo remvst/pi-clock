@@ -51,7 +51,7 @@ app.use('/frames', express.static('frames'));
 app.use('/', express.static('static'));
 
 server.listen(PORT, () => {
-    log.info('Server started');
+    log.info('Server started on port ' + PORT);
 
     setInterval(() => alarm.tick(), 1000);
     setInterval(broadcastWeather, 30000);
@@ -313,7 +313,7 @@ function playMessages(messages, client) {
 function broadcastNextAlarm() {
     const nextAlarm = alarm.nextAlarmTime();
     if (!nextAlarm) {
-        return;   
+        return;
     }
 
     clients.forEach(client => {
