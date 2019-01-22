@@ -57,7 +57,11 @@ class MessageController {
         this.currentMessage = message;
         this.currentMessage.show()
             .catch(err => console.error(err))
-            .then(() => this.processNextMessage());
+            .then(() => {
+                if (this.currentMessage === message) {
+                    this.processNextMessage();
+                }
+            });
     }
 
 }
