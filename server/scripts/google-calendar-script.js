@@ -20,7 +20,7 @@ class GoogleCalendarScript extends Script {
 
         const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
 
-        return this.allEventsOfAllCalendars(dayStart, dayEnd)
+        return this.googleCalendar.allEventsOfAllCalendars(dayStart, dayEnd)
             .then(items => {
                 const messages = [];
 
