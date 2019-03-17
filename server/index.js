@@ -263,7 +263,18 @@ function convertMessageSettings(message) {
                 })
 
                 // Save the audio file and return it along with the string
-                .then(contents => fs.outputFile(__dirname + '/..' + file, contents))
+                .then(contents => {
+                    const filePath = __dirname + '/..' + file;
+
+                    // Delete the file an hour later (assume it'll have been played by then)
+                    setTimeout(() => {
+                        fs.remove(filePath, err => {
+                            console.error('Error deleting file at ' + filePath, err);
+                        });
+                    }, 60 * 3600);
+
+                    return fs.outputFile(filePath, contents);
+                })
                 .then(() => {
                     return {
                         'url': file,
