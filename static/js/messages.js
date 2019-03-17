@@ -108,7 +108,9 @@ class VideoMessage extends Message {
     }
 
     stop() {
-        this.player.destroy();
+        try {
+            this.player.destroy();
+        } catch(e) {}
         this.doneDeferred.resolve();
     }
 

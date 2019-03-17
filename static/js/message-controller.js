@@ -38,7 +38,6 @@ class MessageController {
         }
 
         this.currentMessage.stop();
-        this.currentMessage = null;
     }
 
     processNextMessage() {
