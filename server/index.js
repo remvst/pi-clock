@@ -134,7 +134,7 @@ alarm.ringCallback = event => {
     if (event.type === 'wakeup') {
         generateScriptMessagesAndBroadcast(wakeUpScripts);
         broadcastNextAlarm();
-    } else if (event.type === 'alarm' || event.title.indexOf('wake') >= 0) {
+    } else if (event.type === 'alarm' || (event.title || '').indexOf('wake') >= 0) {
         generateScriptMessagesAndBroadcast(alarmScripts);
         broadcastNextAlarm();
     } else if (event.type === 'event') {
