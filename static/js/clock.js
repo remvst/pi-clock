@@ -45,7 +45,7 @@ function updateClocks() {
             countdown.innerHTML = 'Alarm in ' + days + 'd, ' + hours + 'h, ' + minutes + 'm, ' + seconds + 's';
         });
         document.querySelectorAll('.countdown-indicator').forEach(indicator => {
-            indicator.style.height = diff / (24 * 3600 * 1000) + '%';
+            indicator.style.height = (1 - diff / (24 * 3600 * 1000)) + '%';
         });
     }
 }
