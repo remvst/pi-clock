@@ -54,10 +54,10 @@ function showSection(sectionId) {
     }
 
     document.querySelectorAll('section').forEach(section => {
-        section.style.display = 'none';
+        section.className = 'hidden'
     });
 
-    section.style.display = 'block';
+    section.className = 'visible';
 }
 
 function sectionIsVisible(sectionId) {
@@ -121,27 +121,12 @@ window.addEventListener('load', () => {
     socket.on('disconnect', () => document.querySelector('#disconnected-banner').style.display = 'block');
     socket.on('play-message', messageData => messageController.addToQueue(messageData));
     socket.on('next-alarm', messageData => receivedNextAlarm(messageData));
-    socket.on('weather  ', weather => receivedWeather(weather));
+    socket.on('weather', weather => receivedWeather(weather));
 
     // Controls
     document.querySelector('#test-message-button').addEventListener('click', () => {
         showSection('clock');
         socket.emit('test-message');
-    });
-
-    document.querySelector('#timelapse-10m-button').addEventListener('click', () => {
-        showSection('clock');
-        socket.emit('timelapse', {'duration': 10 * 60, 'framerate': 10 / 60});
-    });
-
-    document.querySelector('#timelapse-1hr-button').addEventListener('click', () => {
-        showSection('clock');
-        socket.emit('timelapse', {'duration': 3600, 'framerate': 3 / 60});
-    });
-
-    document.querySelector('#timelapse-24hr-button').addEventListener('click', () => {
-        showSection('clock');
-        socket.emit('timelapse', {'duration': 24 * 3600, 'framerate': 1 / 60});
     });
 
     document.querySelector('#alarm').addEventListener('click', () => {
@@ -168,7 +153,7 @@ window.addEventListener('load', () => {
         showSection('clock');
     });
 
-    document.querySelector('#close-video-button').addEventListener('click', () => {
+    document.querySelector('#close-video-button').addEventListener('mousedown', () => {
         messageController.skipMessage();
     });
 

@@ -7,7 +7,6 @@ const googleTTS = require('google-tts-api');
 const rp = require('request-promise');
 const fs = require('fs-extra');
 const uuid = require('uuid4');
-const NodeWebcam = require('node-webcam');
 const moment = require('moment');
 const { exec } = require('child_process');
 const espeak = require('espeak');
@@ -55,7 +54,7 @@ server.listen(PORT, () => {
     log.info('Server started on port ' + PORT);
 
     setInterval(() => alarm.tick(), 1000);
-    setInterval(broadcastWeather, 30000);
+    setInterval(broadcastWeather, 5 * 60 * 1000);
 });
 
 setInterval(() => {
@@ -163,16 +162,6 @@ io.on('connection', client => {
 
     client.on('sleep-radio', () => {
         playMessages([{'radioUrl': config.SLEEP_RADIO_URL}], client);
-    });
-
-    client.on('timelapse', settings => {
-        const duration = settings.duration || 10 * 60;
-        const framerate = settings.framerate || 10 / 60;
-
-        playMessages(['Starting timelapse for ' + Math.round(duration / 60) + ' minutes at ' + (Math.round(framerate * 100) / 100) + ' FPS'], client);
-
-        makeTimelapse(duration, framerate, client)
-            .then(() => playMessages(['Timelapse is ready'], client));
     });
 
     client.on('hello', () => {
@@ -346,83 +335,6 @@ function broadcastWeather() {
         .then(weather => {
             clients.forEach(client => client.emit('weather', weather));
         });
-}
-
-function takePicture(path, delayInMs) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const camera = NodeWebcam.create({
-                width: 1280,
-                height: 720,
-                quality: 100,
-                delay: 0,
-                saveShots: false,
-                skip: 40,
-                output: 'jpeg',
-                callbackReturn: 'location',
-                verbose: true
-            });
-
-            camera.capture(path, (err, data) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(path);
-                }
-            });
-        }, delayInMs);
-    });
-}
-
-function makeTimelapse(duration, fps, client) {
-    const frames = duration * fps;
-    const maxFrameIdLength = Math.max(frames.toString().length, 4);
-    const dateFormat = moment(new Date()).utc().format();
-    const folder = 'frames/' + dateFormat;
-
-    return fs.mkdirp(folder)
-        .then(() => {
-            const promises = [];
-            for (let i = 0 ; i < frames ; i++) {
-                const file = folder + '/frame-' + addZeroes(i, maxFrameIdLength);
-                const delayInMs = i * (1 / fps) * 1000;
-                promises.push(takePicture(file, delayInMs));
-            }
-
-            return Promise.all(promises.map(promise => {
-                return promise
-                    .then(path => playMessages([{'pictureUrl': path + '.jpg'}], client))
-                    .catch(err => log.error(err));
-            }));
-        })
-        .then(() => {
-            log.info('Assembling frames');
-            playMessages(['Frames are ready, assembling...'], client);
-
-            const videoPath = 'video.mp4';
-            return new Promise((resolve, reject) => {
-                const command = 'ffmpeg -r 25 -i ' + folder + '/frame-*.jpg -c:v libx264 -vf fps=25 -pix_fmt yuv420p ' + folder + '/' + dateFormat + '.mp4';
-                log.debug(command);
-                exec(command, err => {
-                    if (err) {
-                        log.error(err);
-                        reject(err);
-                        return;
-                    }
-
-                    log.info('Frames assembled');
-                    resolve(videoPath);
-                });
-            });
-        });
-}
-
-function addZeroes(x, n = 2) {
-    x = x.toString();
-    while (x.length < n) {
-        x = '0' + x;
-    }
-    return x;
 }
 
 function generateScriptMessagesAndBroadcast(scripts) {
