@@ -1,6 +1,6 @@
 'use strict';
 
-const {google} = require('googleapis');
+const { google } = require('googleapis');
 const readline = require('readline');
 const fs = require('fs-extra');
 

@@ -15,6 +15,7 @@ const bunyan = require('bunyan');
 
 const Clients = require('./clients');
 const GoogleCalendar = require('./google-calendar');
+const Youtube = require('./youtube');
 const OpenWeatherMap = require('./open-weather-map');
 const AlarmClock = require('./alarm-clock');
 const QuoteOfTheDay = require('./quote-of-the-day');
@@ -62,6 +63,8 @@ setInterval(() => {
     log.info(`Heap: ${Math.round(used * 100) / 100} MB`);
 }, 30000);
 
+
+
 // APIs
 const gc = new GoogleCalendar({
     'credentialsPath': CREDENTIALS_PATH,
@@ -87,12 +90,17 @@ const news = new News({
     'source': 'bbc-news'
 });
 
-// Scripts
-const randomVideoScript = new RandomVideoScript(config.VIDEO_IDS);
+const youtube = new Youtube({
+    'log': log,
+    'apiKey': config.YOUTUBE_API_KEY
+});
 
-const wakeUpScripts = [
-    new RandomVideoScript(config.ALARM_VIDEO_IDS, true)
-];
+const fetchAlarmVideos = () => youtube.videosInPlaylist(config.ALARM_PLAYLIST_ID);
+const fetchPrealarmVideos = () => youtube.videosInPlaylist(config.PRE_ALARM_PLAYLIST_ID);
+
+// Scripts
+const alarmVideoScript = new RandomVideoScript(fetchAlarmVideos);
+const wakeUpScripts = [new RandomVideoScript(fetchPrealarmVideos, true)];
 
 const alarmScripts = [
     new StaticScript(['Good morning Remi', 'Time to wake up']),
@@ -101,9 +109,9 @@ const alarmScripts = [
     new WeatherScript(weather),
     new NewsScript(news),
     new QuoteOfTheDayScript(quote),
-    randomVideoScript,
-    randomVideoScript,
-    randomVideoScript,
+    alarmVideoScript,
+    alarmVideoScript,
+    alarmVideoScript,
     new StaticScript(['Have an amazing day'])
 ];
 
@@ -142,7 +150,7 @@ alarm.ringCallback = event => {
             playMessages(['Event starting now', event.title], client);
 
             if ((event.title || '').toLowerCase().indexOf('video') >= 0) {
-                randomVideoScript.generateMessages().then(messages => playMessages(messages, client));
+                alarmVideoScript.generateMessages().then(messages => playMessages(messages, client));
             }
         });
     }
