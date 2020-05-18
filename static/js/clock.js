@@ -46,7 +46,6 @@ function updateClocks() {
         });
         document.querySelectorAll('.countdown-indicator').forEach(indicator => {
             indicator.style.height = diff / (24 * 3600 * 1000) + '%';
-            indicator.style.height = '50%';
         });
     }
 }
