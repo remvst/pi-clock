@@ -141,7 +141,7 @@ alarm.ringCallback = event => {
         clients.forEach(client => {
             playMessages(['Event starting now', event.title], client);
 
-            if (event.title.toLowerCase().indexOf('video') >= 0) {
+            if ((event.title || '').toLowerCase().indexOf('video') >= 0) {
                 randomVideoScript.generateMessages().then(messages => playMessages(messages, client));
             }
         });
