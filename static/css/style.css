@@ -45,12 +45,12 @@ button:active {
 
 section {
     position: absolute;
-    display: flex;
-
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
+
+    display: flex;
 
     transform: translateX(0);
     transition: transform 0.3s linear, opacity 0.1s linear;
@@ -60,6 +60,8 @@ section {
 section>div {
     align-self: center;
     flex-basis: 100%;
+
+    z-index: 2;
 }
 
 section.hidden {
@@ -89,8 +91,20 @@ section.hidden {
     font-size: 10px;
 }
 
+#clock .countdown-indicator {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    background-color: #444;
+
+    z-index: 1;
+}
+
 #clock .weather {
-    font-size: 20px;
+    font-size: 40px;
     margin-top: 10px;
 }
 
