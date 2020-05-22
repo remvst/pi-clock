@@ -33,20 +33,20 @@ class AlarmClock {
     }
 
     get nextEvent() {
-        return Array.from(this.events).reduce((minEvent, event) => {
+        return this.events.reduce((minEvent, event) => {
             return !minEvent || event.date.getTime() < minEvent.date.getTime() ? event : minEvent;
         }, null);
     }
 
     tick() {
         // Find which events are in the past
-        const events = Array.from(this.events).filter((event) => {
+        const events = this.events.filter((event) => {
             return event.date.getTime() < this.currentDate().getTime();
         });
 
         events.forEach((event) => {
             // Remove them
-            this.events.delete(event);
+            this.events.splice(this.events.indexOf(event), 1);
 
             // Actually ring
             this.ring(event);
