@@ -45,7 +45,7 @@ const log = bunyan.createLogger({'name': 'pi-clock'});
 
 const clients = new Clients(io, log);
 
-app.use('/tmp', express.static('tmp'));
+app.use('/tmp', express.static('/tmp/pi-clock'));
 app.use('/frames', express.static('frames'));
 app.use('/', express.static('static'));
 
@@ -221,7 +221,10 @@ function convertMessageSettings(message) {
     // Text message: go google translate
     if (typeof message === 'string') {
         return Promise.all(splitStringIntoChunks(message).map(chunk => {
-            const file = '/tmp/' + uuid() + '.mp3';
+            const fileName = uuid() + '.mp3';
+            const filePath = '/tmp/pi-clock/' + fileName;
+            const filePublicUrl = '/tmp/' + fileName;
+
             return googleTTS(chunk, 'en', 1)
                 .then(url => rp({'uri': url, 'encoding': null}))
 
@@ -242,20 +245,20 @@ function convertMessageSettings(message) {
 
                 // Save the audio file and return it along with the string
                 .then(contents => {
-                    const filePath = __dirname + '/..' + file;
+                    // const filePath = __dirname + '/..' + file;
 
                     // Delete the file an hour later (assume it'll have been played by then)
-                    setTimeout(() => {
-                        fs.remove(filePath, err => {
-                            console.error('Error deleting file at ' + filePath, err);
-                        });
-                    }, 60 * 3600);
+                    // setTimeout(() => {
+                    //     fs.remove(filePath, err => {
+                    //         console.error('Error deleting file at ' + filePath, err);
+                    //     });
+                    // }, 60 * 3600);
 
                     return fs.outputFile(filePath, contents);
                 })
                 .then(() => {
                     return {
-                        'url': file,
+                        'url': filePublicUrl,
                         'message': chunk
                     };
                 });
