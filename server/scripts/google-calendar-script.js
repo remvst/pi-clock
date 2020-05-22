@@ -27,7 +27,7 @@ class GoogleCalendarScript extends Script {
                 messages.push('You have ' + items.length + ' events scheduled today');
 
                 items.forEach(event => {
-                    const eventName = event.summary;
+                    const eventName = event.summary || 'Unknown';
 
                     let eventTime;
                     if (event.start.dateTime) {

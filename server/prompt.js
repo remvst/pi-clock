@@ -1,6 +1,8 @@
 'use strict';
 
-function prompt(question) {
+const readline = require('readline');
+
+module.exports = function prompt(question) {
     const rl = readline.createInterface({
         'input': process.stdin,
         'output': process.stdout,
@@ -12,6 +14,4 @@ function prompt(question) {
             resolve(input);
         });
     });
-}
-
-module.exports = prompt;
+};

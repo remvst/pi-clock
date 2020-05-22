@@ -7,7 +7,6 @@ const googleTTS = require('google-tts-api');
 const rp = require('request-promise');
 const fs = require('fs-extra');
 const uuid = require('uuid4');
-const moment = require('moment');
 const { exec } = require('child_process');
 const espeak = require('espeak');
 const bunyan = require('bunyan');
@@ -117,38 +116,20 @@ const alarmScripts = [
 // Alarm
 const alarm = new AlarmClock(log);
 
-alarm.addRecurrentAlarm('Sunday wake up', 0, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
-alarm.addRecurrentAlarm('Monday wake up', 1, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
-alarm.addRecurrentAlarm('Tuesday wake up', 2, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
-alarm.addRecurrentAlarm('Wednesday wake up', 3, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
-alarm.addRecurrentAlarm('Thursday wake up', 4, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
-alarm.addRecurrentAlarm('Friday wake up', 5, 8.5 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
-alarm.addRecurrentAlarm('Saturday wake up', 6, 10 * 3600 * 1000 - 20 * 60 * 1000, {'type': 'wakeup'});
-
-alarm.addRecurrentAlarm('Sunday morning', 0, 10 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Monday morning', 1, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Tuesday morning', 2, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Wednesday morning', 3, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Thursday morning', 4, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Friday morning', 5, 8.5 * 3600 * 1000, {'type': 'alarm'});
-alarm.addRecurrentAlarm('Saturday morning', 6, 10 * 3600 * 1000, {'type': 'alarm'});
-
-// alarm.addRecurrentAlarm('now', new Date().getDay(), alarm.millisecondsInDay(new Date()) + 5000, {'type': 'wakeup'});
-// alarm.addRecurrentAlarm('now again', new Date().getDay(), alarm.millisecondsInDay(new Date()) + 10000, {'type': 'alarm'});
-// alarm.addOneTimeAlarm('testing', new Date(Date.now() + 5000), {'foo': 'bar'});
-
 alarm.ringCallback = event => {
-    if (event.type === 'wakeup') {
+    const title = event.title || '';
+
+    if (title === 'wakeup') {
         generateScriptMessagesAndBroadcast(wakeUpScripts);
         broadcastNextAlarm();
-    } else if (event.type === 'alarm' || (event.title || '').indexOf('wake') >= 0) {
+    } else if (title.indexOf('alarm') >= 0) {
         generateScriptMessagesAndBroadcast(alarmScripts);
         broadcastNextAlarm();
-    } else if (event.type === 'event') {
+    } else {
         clients.forEach(client => {
-            playMessages(['Event starting now', event.title], client);
+            playMessages(['Event starting now', event.title || 'Unknown'], client);
 
-            if ((event.title || '').toLowerCase().indexOf('video') >= 0) {
+            if (title.toLowerCase().indexOf('video') >= 0) {
                 alarmVideoScript.generateMessages().then(messages => playMessages(messages, client));
             }
         });
@@ -170,7 +151,7 @@ io.on('connection', client => {
 
     client.on('alarm', () => {
         playMessages(['Triggering alarm messages...'], client);
-        alarm.ringCallback({'type': 'alarm'});
+        alarm.ringCallback({'title': 'alarm'});
     });
 
     broadcastNextAlarm();
@@ -192,7 +173,7 @@ function setupAlarmsForToday() {
     return gc.allEventsOfAllCalendars(new Date(), dayEnd)
         .then(items => {
             items.forEach(event => {
-                // Use either the event time or 9AM
+                // Use either the event time or 9AM (useful for whole day events)
                 const eventTime = event.start.dateTime || dayStart.getTime() + 9 * 3600 * 1000;
                 const eventDate = new Date(eventTime);
 
@@ -200,12 +181,12 @@ function setupAlarmsForToday() {
                     return;
                 }
 
-                if (alarm.hasEvent(event.id)) {
-                    return;
-                }
-
-                log.info('Setting up alarm for event "' + event.summary + '" on ' + moment(eventDate).format());
-                alarm.addOneTimeAlarm(event.id, 'Event: ' + event.summary, eventDate, {'type': 'event', 'title': event.summary});
+                alarm.addEvent(
+                    event.id,
+                    event.summary,
+                    eventDate,
+                    {'type': 'event', 'title': event.summary}
+                );
             });
 
             broadcastNextAlarm();
@@ -320,13 +301,13 @@ function playMessages(messages, client) {
 }
 
 function broadcastNextAlarm() {
-    const nextAlarm = alarm.nextAlarmTime();
-    if (!nextAlarm) {
+    const nextEvent = alarm.nextEvent;
+    if (!nextEvent) {
         return;
     }
 
     clients.forEach(client => {
-        client.emit('next-alarm', {'time': nextAlarm.getTime()});
+        client.emit('next-alarm', {'time': nextEvent.date.getTime()});
     });
 }
 
