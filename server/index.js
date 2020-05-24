@@ -117,7 +117,7 @@ const alarmScripts = [
 const alarm = new AlarmClock(log);
 
 alarm.ringCallback = event => {
-    const title = event.title || '';
+    const title = (event.title || '').toLowerCase();
 
     if (title === 'wakeup') {
         generateScriptMessagesAndBroadcast(wakeUpScripts);
@@ -129,7 +129,7 @@ alarm.ringCallback = event => {
         clients.forEach(client => {
             playMessages(['Event starting now', event.title || 'Unknown'], client);
 
-            if (title.toLowerCase().indexOf('video') >= 0) {
+            if (title.indexOf('video') >= 0) {
                 alarmVideoScript.generateMessages().then(messages => playMessages(messages, client));
             }
         });
